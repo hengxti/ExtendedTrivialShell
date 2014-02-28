@@ -49,6 +49,7 @@ public class TrivialShell {
 		
 	}
 
+	
 	public File getCwd() {
 		return cwd;
 	}
