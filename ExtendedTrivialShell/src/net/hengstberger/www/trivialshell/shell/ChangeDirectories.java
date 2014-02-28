@@ -4,6 +4,8 @@ import java.io.File;
 
 class ChangeDirectories extends BuiltinCommand{
 
+	final static String COMMAND_NAME = "cd";
+	
 	ChangeDirectories(TrivialShell shell) {
 		super(shell);
 	}

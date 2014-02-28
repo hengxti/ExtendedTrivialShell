@@ -1,6 +1,6 @@
 package net.hengstberger.www.trivialshell.shell;
 
-abstract class BuiltinCommand {
+abstract class BuiltinCommand{
 
 	protected TrivialShell shell;
 	
