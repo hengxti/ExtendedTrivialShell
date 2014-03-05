@@ -1,2 +1,3 @@
 This is a extensible trivial shell with support for multiple file systems.
-Bachelor thesis by Martin
+* FAT 16
+Bachelor thesis by Martin 
