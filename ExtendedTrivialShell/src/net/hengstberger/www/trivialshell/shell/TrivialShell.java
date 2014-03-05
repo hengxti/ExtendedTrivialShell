@@ -91,7 +91,7 @@ public class TrivialShell {
 						builtinCommands.get(builtinCommandName).execute(args);
 					} catch (Exception e) {
 						System.err.print(builtinCommandName + ": Error trying to execute: " + e.toString());
-						//e.printStackTrace();
+						//e.printStackTrace(); 
 					}
 					return;
 				}
