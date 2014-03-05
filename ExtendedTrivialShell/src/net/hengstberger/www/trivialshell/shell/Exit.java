@@ -1,9 +1,9 @@
 package net.hengstberger.www.trivialshell.shell;
 
-public class Exit extends BuiltinCommand{
+public class Exit extends BuiltinCommand {
 
 	final static String COMMAND_NAME = "exit";
-	
+
 	Exit(TrivialShell shell) {
 		super(shell);
 	}
