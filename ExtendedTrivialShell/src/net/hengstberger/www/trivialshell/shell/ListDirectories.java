@@ -10,6 +10,7 @@ class ListDirectories extends BuiltinCommand{
 		super(shell);
 	}
 
+	
 	@Override
 	public void execute(String[] args) throws Exception {
 		File cwd = shell.getCwd();
