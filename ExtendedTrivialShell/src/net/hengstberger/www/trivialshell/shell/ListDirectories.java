@@ -13,14 +13,29 @@ class ListDirectories extends BuiltinCommand{
 	@Override
 	public void execute(String[] args) throws Exception {
 		File cwd = shell.getCwd();
-		
 		File[] FileListing = cwd.listFiles();
+		StringBuilder listing  = new StringBuilder();
 		
 		for (File curFile: FileListing){
-			System.out.print(curFile.getName() + " ");
-		}//TODO formating, params
-		System.out.println();
+			StringBuilder entry = new StringBuilder();
+			if(curFile.isHidden()){
+				entry.append("(");
+			}
+			entry.append(curFile.getName());
+			if(curFile.isDirectory()){
+				entry.append(File.separator);
+			}
+			if(curFile.isHidden()){
+				entry.append(")");
+			}
+			entry.append(" ");
+			listing.append(entry);
+		}//TODO params
+		
+		//TODO listing alle 80 Zeichen abteilen
+		System.out.println(listing.toString());
 		
 	}
+
 	
 }

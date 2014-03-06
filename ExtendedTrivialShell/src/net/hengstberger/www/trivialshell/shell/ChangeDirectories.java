@@ -12,11 +12,15 @@ class ChangeDirectories extends BuiltinCommand{
 
 	@Override
 	public void execute(String[] args) throws Exception {
-		if(args.length == 2){
-			if(args[0].toLowerCase()=="cd"){
-				// TODO if dir exsists
-				shell.setCwd(new File(args[1]));
+		if(args.length == 1){
+			
+			File newDir = new File(shell.getCwd().getCanonicalPath()+ File.separator +args[0]);			
+			
+			if (!newDir.exists()||!newDir.isDirectory()){
+				throw new NoSuchFileOrDirectoryException(newDir.getCanonicalPath());
 			}
+			
+			shell.setCwd(newDir);
 		}
 	}
 
