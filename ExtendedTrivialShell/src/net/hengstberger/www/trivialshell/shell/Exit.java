@@ -10,7 +10,7 @@ public class Exit extends BuiltinCommand {
 
 	@Override
 	public void execute(String[] args) throws Exception {
-		System.out.print("\nexiting! Goodbye :)");
+		System.out.print("exiting! Goodbye :)");
 		System.exit(0);
 	}
 
