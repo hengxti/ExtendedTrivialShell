@@ -11,6 +11,8 @@ import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.LinkedList;
+import java.util.List;
 
 public class TrivialShell {
 
@@ -55,14 +57,33 @@ public class TrivialShell {
 	public void runShell() throws IOException {
 		String line = null;
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-		
+		History history = new History();
 		printPrompt();
+
+// //TODO code for Tab and history		
+//		int character=br.read();
+//		while (character != -1) { // while no End of line found
+//			
+//			switch(character){
+//			case '\t': System.out.print("tab rec"); break;
+//			case 38: System.out.print("arrow up"); break; // arrow up
+//			case 40: System.out.print("arrow down"); break; // arrow down
+//			default:
+//			}
+//			
+//
+//			character=br.read();
+//			line.append(character);
+//		} // EoL found
+//		parseCommand(line.toString());
+//		history.update(line.toString());
+//		printPrompt();
 		
-		while((line = br.readLine())!=null){
-			parseCommand(line);
-			printPrompt();
-		}
-		// TODO tab
+		 while((line = br.readLine())!=null){
+		 parseCommand(line);
+		 printPrompt();
+		 }
+
 
 	}
 
@@ -83,23 +104,23 @@ public class TrivialShell {
 		cmd = cmdArgs[0];
 		args = Arrays.copyOfRange(cmdArgs, 1, cmdArgs.length);
 		// look for builtin commands
-		for (Enumeration<String> builtinCommandNames = builtinCommands.keys(); 
-				builtinCommandNames.hasMoreElements(); ) {
-				String builtinCommandName = builtinCommandNames.nextElement();
-				if (cmd.equals(builtinCommandName)) {
-					try {
-						builtinCommands.get(builtinCommandName).execute(args);
-					} catch (Exception e) {
-						System.err.print("Error executing: " + builtinCommandName + " in " + e.toString());
-						//e.printStackTrace(); 
-					}
-					return;
+		for (Enumeration<String> builtinCommandNames = builtinCommands.keys(); builtinCommandNames
+				.hasMoreElements();) {
+			String builtinCommandName = builtinCommandNames.nextElement();
+			if (cmd.equals(builtinCommandName)) {
+				try {
+					builtinCommands.get(builtinCommandName).execute(args);
+				} catch (Exception e) {
+					System.err.print("Error executing: " + builtinCommandName
+							+ " in " + e.toString());
+					// e.printStackTrace();
 				}
+				return;
+			}
 		}
 	}
 
 	public File getCwd() {
-
 		return cwd;
 	}
 
