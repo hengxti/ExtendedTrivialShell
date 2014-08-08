@@ -25,5 +25,6 @@ public abstract class FileSystem {
 	public abstract FSfile readFile (String path);
 	public abstract FSfile deleteFile (String path);
 	public abstract FSfile createFile (String path);
+	//TODO hardlink, symbolic link, rename, file attributes, update 
 	
 }

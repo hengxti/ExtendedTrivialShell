@@ -59,5 +59,15 @@ public class FSdirectoryEntry {
 		this.permissions = permissions;
 	}
 	
+	@Override
+	public String toString() {
+		return "FSdirectoryEntry [fileName=" + fileName + ", type=" + type
+				+ ", size=" + size + ", creationDate=" + creationDate
+				+ ", accessDate=" + accessDate + ", modificationDate="
+				+ modificationDate + ", permissions=" + permissions + "]";
+	}
+	
+	
+	
 	
 }
