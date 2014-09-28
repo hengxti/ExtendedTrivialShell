@@ -8,8 +8,10 @@ import java.nio.channels.FileLock;
 
 public class HardDisk {
 
-	public final static int SECTOR_SIZE_512 = 512;
-	public final static byte[] ZERO_SECTOR_512 = new byte[SECTOR_SIZE_512];
+	public final int NUMBER_OF_HEADS = 1;
+	public final int SECTORS_PER_TRACK = 32;
+	public final int SECTOR_SIZE_512 = 512;
+	public final byte[] ZERO_SECTOR_512 = new byte[SECTOR_SIZE_512];
 //	public final static int SECTOR_SIZE_4096 = 4096;
 //	public final static byte[] ZERO_SECTOR_4096 = new byte[SECTOR_SIZE_4096];
 
@@ -18,7 +20,7 @@ public class HardDisk {
 	private RandomAccessFile diskFile;
 	private final long sizeInBytes;
 
-	private static int sectorSize = SECTOR_SIZE_512;
+	private  int sectorSize = SECTOR_SIZE_512;
 	private FileChannel fileChannel;
 //	private File metaDataFile;
 	private final int sectorCnt;
@@ -31,7 +33,7 @@ public class HardDisk {
 
 	private HardDisk(String fullFilePath, int sectorCnt) throws IOException {
 		this.sectorCnt = sectorCnt;
-		sizeInBytes = HardDisk.sectorSize * this.sectorCnt;
+		sizeInBytes = this.sectorSize * this.sectorCnt;
 		diskFile = new RandomAccessFile(fullFilePath, "rw");
 		diskFile.setLength(sizeInBytes);
 		setLockChannel();
@@ -48,7 +50,7 @@ public class HardDisk {
 		fileChannel = diskFile.getChannel();
 	}
 
-	public static HardDisk createDisk(String fullFilePath, int sectorCnt,
+	public HardDisk createDisk(String fullFilePath, int sectorCnt,
 			boolean overwrite) throws IOException {
 		if (sectorCnt <= 0) {
 			throw new IllegalArgumentException(
@@ -75,7 +77,7 @@ public class HardDisk {
 
 	}
 
-/*	public static HardDisk createDisk(String fullFilePath, int sectorCnt,
+/*	public HardDisk createDisk(String fullFilePath, int sectorCnt,
 			boolean sectorSize4096, boolean overwrite) throws IOException {
 		if (sectorSize4096) {
 			sectorSize = SECTOR_SIZE_4096;
@@ -85,7 +87,7 @@ public class HardDisk {
 		return createDisk(fullFilePath, sectorCnt, overwrite);
 	}
 */
-	public static HardDisk openDisk(String fullFilePath) throws IOException{
+	public HardDisk openDisk(String fullFilePath) throws IOException{
 		File diskFile = new File(fullFilePath);
 		if(!diskFile.exists()){
 			throw new IllegalArgumentException(fullFilePath+" Disk File does not exsit");
@@ -129,7 +131,7 @@ public class HardDisk {
 		return sizeInBytes;
 	}
 
-	public static int getSectorSize() {
+	public int getSectorSize() {
 		return sectorSize;
 	}
 
