@@ -1,21 +1,29 @@
 package fat16;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Random;
 
+import org.codehaus.preon.Codec;
+import org.codehaus.preon.Codecs;
+import org.codehaus.preon.annotation.BoundString.Encoding;
+
 import fat.structures.BootSectorFAT16;
+import fat.structures.DirectoryEntry;
 import filesystem.HardDisk;
 
 
 public class FAT16IO {
 	
 	private static final String oemName = "MSWIN4.1"; // for compatibility reasons
-	private static final byte sectorsPerCluster = 1;
-	private static final byte reservedSectorCount = 1;
-	private static final short RootEntryCountMaximum = 512;
-	private static final int numberOfFATs = 2;
+	private static final byte SECTORS_PER_CLUSTER = 1;
+	private static final byte RESERVED_SECTOR_COUNT = 1;
+	private static final short ROOT_ENTRY_COUNT_MAXIMUM = 512;
+	private static final int NUMBER_OF_FATS = 1;
 	private static final int FAT_BIT_SIZE = 16;
+	private static final int MAXIMUM_CLUSTER_COUNT = 65536; // 2^16
+	private static final byte MEDIA_DESCRIPTOR_BYTE = (byte)0xF8; // means "hard disks of any size" this is outdated, but has to be set to this value.
 	HardDisk hardDisk;
 	BootSectorFAT16 bootSector;
 	
@@ -24,50 +32,49 @@ public class FAT16IO {
 	}
 	
 	public void formatDisk() throws IOException  {
-		//hard disk metrics
-		//int FATEntriesPerCluster = hardDisk.getSectorCnt() * FAT_BIT_SIZE;
-		//int sectorsPerFAT = hardDisk.getSectorCnt() / FATEntriesPerCluster;
+		if(hardDisk.getSectorSize()!=512){
+			throw new IllegalArgumentException("Disk sector size has to be 512!");
+		}
+		int clusterSize= hardDisk.getSectorSize() * SECTORS_PER_CLUSTER;
+		// How many FAT entries (16 Bit long addresses) fit in one cluster? 
+		// Here cluster size is the same as sector size. 
+		// 							512 Bytes / (16 Bit * 8)Bytes -> 256
+		int FATentriesPerCluster = clusterSize / FAT_BIT_SIZE * 8; 
 		
-		//http://www.maverick-os.dk/FileSystemFormats/FAT16_FileSystem.html#SectorsPerTrack 
+		// If we want to be able to address the whole disk (all clusters) how big does the FAT table need to be?
+		// e.g. 2^16 sectors *1/ 256 = 256 clusters
+		int numberOfSectorsPerFAT = (int)Math.floor(hardDisk.getSectorCnt() *SECTORS_PER_CLUSTER/ FATentriesPerCluster);
 		
-		// calculatinng in sectors as a uint here. 
-		
-//		int FATRegion_Size =
-//		int TotalNumberOFSectors = hardDisk.getSectorCnt();
-//		int dataRegionSize = TotalNumberOFSectors - (reservedSectorCount + FATRegion_Size + RootDirectoryRegion_Size);
-//		int sectorsPerFAT = Math.floor(dataRegionSize / sectorsPerCluster);
-//		int FAT16Size = numberOfFATs * sectorsPerFAT; 
-//		
-//		//How many 16 bit (2 byte) FAT entries fit in one cluster
-//		//Here simply: 512 byte (cluster) / 2 byte entry = 256 entries
-//		int FATEntriesPerCluster = CLUSTER_SIZE * 8 / FAT_BIT_SIZE;
-//		
-//		//How many sectors for one FAT do we need if we wanted to address our entire disk
-//		int numberOfSectorsPerFAT = (int) Math.ceil((float) disk.getSectorCount() / (float) FATEntriesPerCluster);
-//		
-//		// not fix, but sort of an absolute minimum sector count
-//		int minSectors = 1 /*boot*/ + numberOfSectorsPerFAT + ROOT_DIRECTORY_SECTORS 
-//				+ ROOT_DIRECTORY_MAX_ENTRIES /* at least one for each root entry */;
-		int FAT16Size = 0; // TODO //FIXME calaculate this accordingly
-		
-		
+		// How big is the root directory going to be? 
+		// 							maximum 256 entries * 32 entry size / 512 Bytes 
+		int RootDirectorySectors = ROOT_ENTRY_COUNT_MAXIMUM * DirectoryEntry.SIZE_BYTES / clusterSize;
+		// An estimation of the minimum disk size
+		// Note that the size of numberOfSectorsPerFAT varies for different hard disks
+		int minimumSectors = RESERVED_SECTOR_COUNT /*Boot Sector*/ + numberOfSectorsPerFAT * NUMBER_OF_FATS + RootDirectorySectors + ROOT_ENTRY_COUNT_MAXIMUM;
+		if(hardDisk.getSectorCnt()<= minimumSectors){
+			throw new IllegalArgumentException("Disk too small!");
+		}
+		if(hardDisk.getSectorCnt()*SECTORS_PER_CLUSTER>MAXIMUM_CLUSTER_COUNT){
+			throw new IllegalArgumentException("Disk too large! Do you want to lose space? Nono ...");
+		}
+				
 		bootSector = new BootSectorFAT16();
 		// values are here set in big endian, preon is flipping it to little endian for all parameters
-		// Offset								0x02	   0x01 	  0x00
+		// Offsets:								0x02	   0x01 	  0x00
 		bootSector.setJmpBoot(new byte[] {(byte)0x90,(byte)0x00,(byte)0xEB});
 		bootSector.setOemName(oemName); 
 		bootSector.setBytesPerSec((short)hardDisk.getSectorSize());
-		bootSector.setSecPerClus(sectorsPerCluster);
-		bootSector.setRsvdSecCnt(reservedSectorCount);
-		bootSector.setNumFATs((byte)numberOfFATs);
-		bootSector.setRootEntCnt(RootEntryCountMaximum); //Note compatibility issues
+		bootSector.setSecPerClus(SECTORS_PER_CLUSTER);
+		bootSector.setRsvdSecCnt(RESERVED_SECTOR_COUNT);
+		bootSector.setNumFATs((byte)NUMBER_OF_FATS);
+		bootSector.setRootEntCnt(ROOT_ENTRY_COUNT_MAXIMUM); //Note compatibility issues
 		if(hardDisk.getSectorCnt()<0x10000){// 2^16
 			bootSector.setTotSec16((short)hardDisk.getSectorCnt());
 		}else{
 			bootSector.setTotSec16((short)0); //TotSec32 must be non-zero
 		}
-		bootSector.setMedia((byte)0xF8); // legacy stuff
-		bootSector.setFatSz16((short) FAT16Size);
+		bootSector.setMedia(MEDIA_DESCRIPTOR_BYTE); // legacy stuff
+		bootSector.setFatSz16((short) numberOfSectorsPerFAT);
 		bootSector.setSecPerTrk((short)hardDisk.SECTORS_PER_TRACK); 
 		bootSector.setNumHeads((short) hardDisk.NUMBER_OF_HEADS);
 		bootSector.setHiddSec(0); // depending on partitioning and operating system
@@ -86,6 +93,28 @@ public class FAT16IO {
 		bootSector.setVolLab("NO NAME    "); // needs to be exactly 11 characters 
 		bootSector.setFilSysType("FAT16   ");// note this is only a hint, FS is not (primarily) determined by this field
 		
+		bootSector.setBootLoaderInstructions(new byte[448]); // No executable instructions set!
+		bootSector.setBootLoadSignature((short) 0xAA55);
+		
+		Codec<BootSectorFAT16> bootSectorCodec = Codecs.create(BootSectorFAT16.class);
+		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+		Codecs.encode(bootSector, bootSectorCodec, byteArrayOutputStream);
+		
+		byte[] bootSectorBytes = byteArrayOutputStream.toByteArray();
+		byte[] defaultFirstFATCluster = new byte[clusterSize]; //http://www.maverick-os.dk/FileSystemFormats/FAT16_FileSystem.html#FileSystemType
+		defaultFirstFATCluster[0] = MEDIA_DESCRIPTOR_BYTE; // Note this is again converted to little endian by preon
+		defaultFirstFATCluster[1] = (byte) 0xFF; // High byte
+		defaultFirstFATCluster[2] = (byte) 0xFF; // Low byte of partition state clean
+		defaultFirstFATCluster[3] = (byte) 0xFF; // High byte of partition state clean
+		
+		hardDisk.writeSector(0, bootSectorBytes);
+		hardDisk.writeSector(1, defaultFirstFATCluster);
+		for(int curSector=2;curSector < hardDisk.getSectorCnt()-1;curSector++){
+			// this is zeroing out the rest of the FAT, (the second FAT) the root directory and the data clusters
+			hardDisk.writeSector(curSector, hardDisk.ZERO_SECTOR_512);
+		}
+		
+		System.out.println("Disk formated");
 	}
 	
 	public FAT16 mount() throws IOException{

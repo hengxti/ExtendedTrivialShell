@@ -1,5 +1,6 @@
 package fat.structures;
 
+import java.io.UnsupportedEncodingException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -9,7 +10,6 @@ import org.codehaus.preon.annotation.BoundString.Encoding;
 
 public class DirectoryEntry {
 	
-
 	private static final int MAXIMAL_FILE_NAME_LENGTH = 11;
 	
 	/**
@@ -22,6 +22,11 @@ public class DirectoryEntry {
 	private static final short YEAR_BIT_MASK   = Short.parseShort("1111 1110 0000 0000",2);
 	private static final short MONTH_BIT_MASK  = Short.parseShort("0000 0001 1110 0000",2);
 	private static final short DAY_BIT_MASK    = Short.parseShort("0000 0000 0001 1111",2);
+	
+	public static final byte DELETED_MARK = (byte) 0xE5;
+	public static final byte UNALLOCATED_MARK = (byte) 0x00;
+
+	public static final int SIZE_BYTES = 32;
 	
 	/**
 	 * ATTR_READ_ONLY 	Indicates that writes to the file should fail.
@@ -201,7 +206,7 @@ public class DirectoryEntry {
 	 * @return the fileName
 	 */
 	public String getFileName() {
-		return fileName; //TODO
+		return fileName;
 	}
 
 	/**
@@ -352,6 +357,33 @@ public class DirectoryEntry {
 		this.fileSize = fileSize;
 	}
 	
+	public void setDeleted (){
+		setFirstByte(DirectoryEntry.DELETED_MARK);
+	}
+	public boolean isDeleted(){
+		return this.fileName.getBytes()[0] == DirectoryEntry.DELETED_MARK;
+	}
+	
+	public void setUnallocated(){
+		setFirstByte(DirectoryEntry.UNALLOCATED_MARK);
+	}
+	
+	public boolean isUnallocated(){
+		return this.fileName.getBytes()[0] == DirectoryEntry.UNALLOCATED_MARK;
+	}
+
+	private void setFirstByte(byte magicNumber) {
+		byte[] fileNameBytes = this.fileName.getBytes();
+		fileNameBytes[0] = magicNumber;
+		
+		try {
+			this.fileName = new String(fileNameBytes, Encoding.ISO_8859_1.toString());
+		} catch (UnsupportedEncodingException e) {
+			System.err.println("Encoding not supported.");
+			e.printStackTrace();
+			System.exit(1);
+		}
+	}
 	
 	
 }

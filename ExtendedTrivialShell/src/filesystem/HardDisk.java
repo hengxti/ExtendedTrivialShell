@@ -50,7 +50,7 @@ public class HardDisk {
 		fileChannel = diskFile.getChannel();
 	}
 
-	public HardDisk createDisk(String fullFilePath, int sectorCnt,
+	public static HardDisk createDisk(String fullFilePath, int sectorCnt,
 			boolean overwrite) throws IOException {
 		if (sectorCnt <= 0) {
 			throw new IllegalArgumentException(
@@ -97,6 +97,10 @@ public class HardDisk {
 		}
 		return new HardDisk(fullFilePath);
 	}
+	
+	public void closeDiskFile() throws IOException{
+		diskFile.close();
+	}
 
 	public synchronized void writeSector(int pos, byte[] data) throws IOException {
 		posCheck(pos);
@@ -111,7 +115,7 @@ public class HardDisk {
 		
 	}
 
-	public synchronized byte[] readSecotr(int pos) throws IOException {
+	public synchronized byte[] readSector(int pos) throws IOException {
 		posCheck(pos);
 		byte[] data = new byte[sectorSize];
 		FileLock diskLock = fileChannel.lock();

@@ -2,6 +2,7 @@ package fat.structures;
 
 import org.codehaus.preon.annotation.BoundNumber;
 import org.codehaus.preon.annotation.BoundString;
+import org.codehaus.preon.annotation.BoundString.Encoding;
 
 public class BootSectorFAT16 extends BootSector {
 
@@ -22,6 +23,13 @@ public class BootSectorFAT16 extends BootSector {
 
 	@BoundString(size = "8")
 	private String FilSysType;
+	
+	@BoundString(size="448",encoding=Encoding.ISO_8859_1) 
+	private byte[] bootLoaderInstructions;
+	
+	@BoundString(size="1") // 2byte
+	private short bootLoadSignature;
+	
 
 	/**
 	 * Int 0x13 drive number (e.g. 0x80). This field supports MS-DOS bootstrap
@@ -128,7 +136,7 @@ public class BootSectorFAT16 extends BootSector {
 	 * of what type of FAT—FAT12, FAT16, or FAT32—that the volume has. This is
 	 * not true. You will note from its name that this field is not actually
 	 * part of the BPB. This string is informational only and is not used by
-	 * Microsoft file system drivers to determine FAT typ,e because it is
+	 * Microsoft file system drivers to determine FAT type because it is
 	 * frequently not set correctly or is not present. See the FAT Type
 	 * Determination section of this document. This string should be set based
 	 * on the FAT type though, because some non-Microsoft FAT file system
@@ -147,5 +155,35 @@ public class BootSectorFAT16 extends BootSector {
 	public void setFilSysType(String filSysType) {
 		FilSysType = filSysType;
 	}
+
+	/**
+	 * @return the bootLoaderInstructions
+	 */
+	public byte[] getBootLoaderInstructions() {
+		return bootLoaderInstructions;
+	}
+
+	/**
+	 * @param bootLoaderInstructions the bootLoaderInstructions to set
+	 */
+	public void setBootLoaderInstructions(byte[] bootLoaderInstructions) {
+		this.bootLoaderInstructions = bootLoaderInstructions;
+	}
+
+	/**
+	 * @return the bootLoadSignature
+	 */
+	public short getBootLoadSignature() {
+		return bootLoadSignature;
+	}
+
+	/**
+	 * @param bootLoadSignature the bootLoadSignature to set
+	 */
+	public void setBootLoadSignature(short bootLoadSignature) {
+		this.bootLoadSignature = bootLoadSignature;
+	}
+	
+	
 
 }
