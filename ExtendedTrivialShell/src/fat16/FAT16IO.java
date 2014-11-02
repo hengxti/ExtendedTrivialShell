@@ -2,13 +2,10 @@ package fat16;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Random;
 
+import java.util.Random;
 import org.codehaus.preon.Codec;
 import org.codehaus.preon.Codecs;
-import org.codehaus.preon.annotation.BoundString.Encoding;
-
 import fat.structures.BootSectorFAT16;
 import fat.structures.DirectoryEntry;
 import filesystem.HardDisk;
@@ -61,7 +58,7 @@ public class FAT16IO {
 		bootSector = new BootSectorFAT16();
 		// values are here set in big endian, preon is flipping it to little endian for all parameters
 		// Offsets:								0x02	   0x01 	  0x00
-		bootSector.setJmpBoot(new byte[] {(byte)0x90,(byte)0x00,(byte)0xEB});
+		bootSector.setJmpBoot(new byte[] {(byte)0xEB,(byte)0x3E,(byte)0x90});
 		bootSector.setOemName(oemName); 
 		bootSector.setBytesPerSec((short)hardDisk.getSectorSize());
 		bootSector.setSecPerClus(SECTORS_PER_CLUSTER);
@@ -93,7 +90,9 @@ public class FAT16IO {
 		bootSector.setVolLab("NO NAME    "); // needs to be exactly 11 characters 
 		bootSector.setFilSysType("FAT16   ");// note this is only a hint, FS is not (primarily) determined by this field
 		
-		bootSector.setBootLoaderInstructions(new byte[448]); // No executable instructions set!
+		StringBuffer bootLoaderInstructions =new StringBuffer("This would usually be executable boot loader instructions, but this disk is not bootable!");
+		
+		bootSector.setBootLoaderInstructions(bootLoaderInstructions.toString()); // No executable instructions set!
 		bootSector.setBootLoadSignature((short) 0xAA55);
 		
 		Codec<BootSectorFAT16> bootSectorCodec = Codecs.create(BootSectorFAT16.class);

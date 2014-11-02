@@ -7,6 +7,7 @@ abstract class BuiltinCommand{
 	BuiltinCommand(TrivialShell shell) {
 		this.shell = shell;
 	}
+	@SuppressWarnings("unused")
 	private BuiltinCommand(){} // forbid empty constructor
 	
 	public abstract void execute(String[] args) throws Exception; 

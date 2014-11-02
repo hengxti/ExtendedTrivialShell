@@ -25,14 +25,13 @@ public class BootSector {
 	// bits
 	private short bytesPerSec;
 
-	@BoundNumber(size = "1")
-	// bytes
+	@BoundNumber(size = "8")
 	private byte SecPerClus;
 
 	@BoundNumber(size = "16")
 	private short RsvdSecCnt;
 
-	@BoundNumber(size = "1")
+	@BoundNumber(size = "8")
 	private byte numFATs;
 
 	@BoundNumber(size = "16")
@@ -41,7 +40,7 @@ public class BootSector {
 	@BoundNumber(size = "16")
 	private short totSec16;
 
-	@BoundNumber(size = "1")
+	@BoundNumber(size = "8")
 	private byte media;
 
 	@BoundNumber(size = "16")
@@ -169,7 +168,7 @@ public class BootSector {
 	 */
 	public void setSecPerClus(byte secPerClus) {
 		switch(secPerClus){
-		case 1:case 2:case 4:case 8:case 16:case 32:case 64: SecPerClus = secPerClus;
+		case 1:case 2:case 4:case 8:case 16:case 32:case 64: SecPerClus = secPerClus; break;
 		default: throw new IllegalArgumentException("Value of Sectors-Per-Cluster not permitted");
 		}
 	}

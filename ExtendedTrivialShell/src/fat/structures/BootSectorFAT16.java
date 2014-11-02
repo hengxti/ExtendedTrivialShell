@@ -1,18 +1,19 @@
 package fat.structures;
 
+import org.codehaus.preon.annotation.BoundList;
 import org.codehaus.preon.annotation.BoundNumber;
 import org.codehaus.preon.annotation.BoundString;
 import org.codehaus.preon.annotation.BoundString.Encoding;
 
 public class BootSectorFAT16 extends BootSector {
 
-	@BoundNumber(size = "1")
+	@BoundNumber(size = "8")
 	private byte DrvNum;
 
-	@BoundNumber(size = "1")
+	@BoundNumber(size = "8")
 	private byte Reserved1;
 
-	@BoundNumber(size = "1")
+	@BoundNumber(size = "8")
 	private byte BootSig;
 
 	@BoundNumber(size = "32")
@@ -24,10 +25,12 @@ public class BootSectorFAT16 extends BootSector {
 	@BoundString(size = "8")
 	private String FilSysType;
 	
-	@BoundString(size="448",encoding=Encoding.ISO_8859_1) 
-	private byte[] bootLoaderInstructions;
+//	@BoundList(size="448") //448*8
+//	private byte[] bootLoaderInstructions;
+	@BoundString(size="448",encoding=Encoding.ISO_8859_1)
+	private String bootLoaderInstructions;
 	
-	@BoundString(size="1") // 2byte
+	@BoundNumber(size="16") // 2byte = 16bits
 	private short bootLoadSignature;
 	
 
@@ -159,14 +162,15 @@ public class BootSectorFAT16 extends BootSector {
 	/**
 	 * @return the bootLoaderInstructions
 	 */
-	public byte[] getBootLoaderInstructions() {
+	public String getBootLoaderInstructions() {
 		return bootLoaderInstructions;
+		
 	}
 
 	/**
 	 * @param bootLoaderInstructions the bootLoaderInstructions to set
 	 */
-	public void setBootLoaderInstructions(byte[] bootLoaderInstructions) {
+	public void setBootLoaderInstructions(String bootLoaderInstructions) {
 		this.bootLoaderInstructions = bootLoaderInstructions;
 	}
 

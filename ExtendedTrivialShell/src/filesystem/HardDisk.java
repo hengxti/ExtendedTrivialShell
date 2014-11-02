@@ -57,7 +57,7 @@ public class HardDisk {
 					"Disk must have at least 1 sector.");
 		}
 		File diskFile = new File(fullFilePath);
-		if (diskFile.isFile()) {
+		//if (diskFile.isFile()) {
 			if (overwrite) {
 				if (diskFile.exists()) {
 					diskFile.delete();
@@ -71,9 +71,9 @@ public class HardDisk {
 					return new HardDisk(fullFilePath, sectorCnt);
 				}
 			}
-		}
-		throw new IllegalArgumentException(fullFilePath
-				+ " is not a valid file.");
+		//}
+		//throw new IllegalArgumentException(fullFilePath
+		//		+ " is not a valid file.");
 
 	}
 
@@ -105,13 +105,17 @@ public class HardDisk {
 	public synchronized void writeSector(int pos, byte[] data) throws IOException {
 		posCheck(pos);
 		
-		if(data.length>=sectorSize){
+		if(data.length>sectorSize){
 			throw new IllegalArgumentException("write data too large!");
 		}
 		
 		FileLock diskLock = fileChannel.lock();
-		diskFile.write(data, pos*sectorSize, data.length);
+		System.out.print("data lengh:"+ data.length);
+		diskFile.seek(pos*sectorSize);
+		diskFile.write(data);
+		//diskFile.write(data, pos*sectorSize, data.length);
 		diskLock.release();
+		System.out.println("done");
 		
 	}
 
