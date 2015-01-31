@@ -10,7 +10,7 @@ public class HardDisk {
 
 	public final int NUMBER_OF_HEADS = 1;
 	public final int SECTORS_PER_TRACK = 32;
-	public final int SECTOR_SIZE_512 = 512;
+	public static final int SECTOR_SIZE_512 = 512;
 	public final byte[] ZERO_SECTOR_512 = new byte[SECTOR_SIZE_512];
 //	public final static int SECTOR_SIZE_4096 = 4096;
 //	public final static byte[] ZERO_SECTOR_4096 = new byte[SECTOR_SIZE_4096];
@@ -110,12 +110,10 @@ public class HardDisk {
 		}
 		
 		FileLock diskLock = fileChannel.lock();
-		System.out.print("data lengh:"+ data.length);
 		diskFile.seek(pos*sectorSize);
 		diskFile.write(data);
 		//diskFile.write(data, pos*sectorSize, data.length);
 		diskLock.release();
-		System.out.println("done");
 		
 	}
 

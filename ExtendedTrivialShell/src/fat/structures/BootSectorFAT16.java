@@ -1,6 +1,5 @@
 package fat.structures;
 
-import org.codehaus.preon.annotation.BoundList;
 import org.codehaus.preon.annotation.BoundNumber;
 import org.codehaus.preon.annotation.BoundString;
 import org.codehaus.preon.annotation.BoundString.Encoding;
