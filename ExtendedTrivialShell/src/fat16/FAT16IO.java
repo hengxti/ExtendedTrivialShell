@@ -3,6 +3,8 @@ package fat16;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Random;
 
 import org.codehaus.preon.Codec;
@@ -11,6 +13,7 @@ import org.codehaus.preon.DecodingException;
 
 import fat.structures.BootSectorFAT16;
 import fat.structures.DirectoryEntry;
+import fat.structures.FATEntry;
 import filesystem.HardDisk;
 
 
@@ -113,7 +116,6 @@ public final class FAT16IO {
 			hardDisk.writeSector(curSector, hardDisk.ZERO_SECTOR_512);
 		}
 		
-		System.out.println("Disk formated");
 	}
 	
 	public static FAT16 mount(HardDisk hardDisk) throws IOException, DecodingException{
@@ -161,26 +163,47 @@ public final class FAT16IO {
 		if(countofClusters <4085){
 			throw new IllegalArgumentException("FAT12 not supported :/");
 		}else if(countofClusters<65525){
-			System.out.print("FAT 16 recognized");
+			System.out.println("FAT 16 recognized");
 		}else {
 			throw new IllegalArgumentException("FAT32 not supported :/");
 		}
 		// ---------------------------------------------------- //
 		
 		FAT16 fat16 = new FAT16(totalSectorCount, countofClusters, hardDisk, bootSector); // move variables in fat16
-		fat16.setfATEntry(readFAT(fat16));
+		fat16.setfATregionStart(bootSector.getHiddSec()/*should be 0*/+bootSector.getRsvdSecCnt()); /*Volume start = 0 + Reserved sectors = 1*/
+		fat16.setRootDirectoryRegionStart(fat16.getfATregionStart()+bootSector.getNumFATs()*bootSector.getFatSz16());
+		fat16.setDataRegionStart(fat16.getRootDirectoryRegionStart() +((int)Math.ceil((bootSector.getRootEntCnt()*32)/bootSector.getBytesPerSec()))); // division rounded up
+		fat16.setReservedRegionSize(bootSector.getRsvdSecCnt());
+		fat16.setfATRegionSize(bootSector.getNumFATs()*bootSector.getFatSz16());
+		fat16.setRootDirectorzRegionSize(((int)Math.ceil((bootSector.getRootEntCnt()*32)/bootSector.getBytesPerSec())));
+		fat16.setDataRegionSize(bootSector.getTotSec16()); // TODO optional implement for 32Bit too
+		fat16.setNumberofFATentries(bootSector.getNumFATs());
+		fat16.setfATEntry(convertBytesToShorts(readFAT(fat16)));
 		return fat16;
 	}
 	
 	private static byte[] readFAT(FAT16 fat16) throws IOException{
-
-		fat16.setfATregionStart(fat16.getBootSector().getHiddSec() /* should be 0*/ + fat16.getBootSector().getRsvdSecCnt());
-		fat16.setfATRegionSize(fat16.getBootSector().getNumFATs()*fat16.getBootSector().getFatSz16());
-		ByteArrayOutputStream buffer = new ByteArrayOutputStream(fat16.getBootSector().getFatSz16());
-		for (int i = fat16.getfATregionStart(); i<fat16.getfATRegionSize(); i++ ){
+		System.out.println("region start "+fat16.getfATregionStart() + " and region size "+ fat16.getRootDirectorzRegionSize());
+		ByteArrayOutputStream buffer = new ByteArrayOutputStream(fat16.getBootSector().getFatSz16()); //TODO 32 bit version
+		for (int i = fat16.getfATregionStart(); i<(fat16.getfATregionStart() + fat16.getfATRegionSize()); i++ ){
+			byte[] b = fat16.getDisk().readSector(i);
+			System.out.print(" "+i+"with "+ b);
 			buffer.write(fat16.getDisk().readSector(i));
 		}
 		return buffer.toByteArray();
+	}
+	
+	private static FATEntry[] convertBytesToShorts(byte[] data) {
+		FATEntry[] shorts = new FATEntry[data.length/2];
+		// to turn bytes to shorts as either big endian or little endian. //FIXME check endianess
+		short[] temp = new short[data.length/2];
+		ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(temp);
+		for(int i=0;i<data.length/2;i++){
+			short s = temp[i];
+			shorts[i].setAddress(s);
+		}
+		return shorts;
+
 	}
 	
 	public static void flushFAT(FAT16 fat16) throws IOException {

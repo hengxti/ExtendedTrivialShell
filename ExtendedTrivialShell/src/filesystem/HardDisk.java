@@ -87,7 +87,7 @@ public class HardDisk {
 		return createDisk(fullFilePath, sectorCnt, overwrite);
 	}
 */
-	public HardDisk openDisk(String fullFilePath) throws IOException{
+	public static HardDisk openDisk(String fullFilePath) throws IOException{
 		File diskFile = new File(fullFilePath);
 		if(!diskFile.exists()){
 			throw new IllegalArgumentException(fullFilePath+" Disk File does not exsit");
@@ -121,7 +121,9 @@ public class HardDisk {
 		posCheck(pos);
 		byte[] data = new byte[sectorSize];
 		FileLock diskLock = fileChannel.lock();
-		diskFile.read(data, pos*sectorSize, sectorSize);
+		//diskFile.read(data, pos*sectorSize, sectorSize);
+		diskFile.seek(pos*sectorSize);
+		diskFile.readFully(data);
 		diskLock.release();
 		return data;
 
