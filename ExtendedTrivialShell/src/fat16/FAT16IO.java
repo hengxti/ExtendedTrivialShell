@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Arrays;
 import java.util.Random;
 
 import org.codehaus.preon.Codec;
@@ -179,6 +180,7 @@ public final class FAT16IO {
 		fat16.setDataRegionSize(bootSector.getTotSec16()); // TODO optional implement for 32Bit too
 		fat16.setNumberofFATentries(bootSector.getNumFATs());
 		fat16.setfATEntry(convertBytesToShorts(readFAT(fat16)));
+		System.out.println(Integer.toHexString(fat16.getfATEntry()[0].getAddress())+" "+Integer.toHexString(fat16.getfATEntry()[1].getAddress())+" "+Integer.toHexString(fat16.getfATEntry()[2].getAddress()));
 		return fat16;
 	}
 	
@@ -190,24 +192,45 @@ public final class FAT16IO {
 			System.out.print(" "+i+"with "+ b);
 			buffer.write(fat16.getDisk().readSector(i));
 		}
+		System.out.println(); //FIXME
 		return buffer.toByteArray();
 	}
-	
+
 	private static FATEntry[] convertBytesToShorts(byte[] data) {
-		FATEntry[] shorts = new FATEntry[data.length/2];
-		// to turn bytes to shorts as either big endian or little endian. //FIXME check endianess
+		FATEntry[] result = new FATEntry[data.length/2];
 		short[] temp = new short[data.length/2];
-		ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(temp);
+		ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(temp); // to turn bytes to shorts as either big endian or little endian. //FIXME check endianess
 		for(int i=0;i<data.length/2;i++){
 			short s = temp[i];
-			shorts[i].setAddress(s);
+			result[i] = new FATEntry();
+			result[i].setAddress(s);
 		}
-		return shorts;
-
+		return result;
 	}
 	
-	public static void flushFAT(FAT16 fat16) throws IOException {
+	public static void flushFAT(HardDisk hardDisk, FAT16 fat16) throws IOException {
+		// note that one fat has several clusters in size 
+		Codec<FAT16> FAT16Codec = Codecs.create(FAT16.class);
+		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+		Codecs.encode(fat16, FAT16Codec, byteArrayOutputStream);
 		
+		// this is writing the first fat to the image file on the hard disk as it is in memory
+		writeConsecutiveClusters(hardDisk, fat16, byteArrayOutputStream, fat16.getfATregionStart()/*should be 1*/);
+	}
+
+	private static void writeConsecutiveClusters(HardDisk hardDisk, FAT16 fat16,
+			ByteArrayOutputStream byteArrayOutputStream, int fromSectorPos) throws IOException {
+		byte[] data = byteArrayOutputStream.toByteArray();
+		int clusterSize = fat16.getBootSector().getBytesPerSec()*fat16.getBootSector().getSecPerClus();
+		int clustercnt=0;
+		double sectorsToWrite = Math.ceil((double)data.length/(double)clusterSize);
+		for(int curSector=fromSectorPos; curSector < sectorsToWrite;curSector++){
+			int from = clusterSize * clustercnt;
+			int to = from + clusterSize;
+			byte[] clusterOfData=Arrays.copyOfRange(data, from, to);
+			hardDisk.writeSector(curSector, clusterOfData);
+			clustercnt++;
+		}
 	}
 	
 	private static void readRootDirectory(FAT16 fat16){

@@ -10,5 +10,8 @@
 	<classpathentry kind="lib" path="D:/Dropbox/uni/BachelorArbeit/Impemetations of Christian Praha/required_jars/required_jars/preon-binding-1.1-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="D:/Dropbox/uni/BachelorArbeit/Impemetations of Christian Praha/required_jars/required_jars/preon-el-1.1-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="D:/Dropbox/uni/BachelorArbeit/Impemetations of Christian Praha/required_jars/required_jars/preon-io-1.1-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="D:/Dropbox/uni/BachelorArbeit/Impemetations of Christian Praha/required_jars/required_jars/preon-binding-1.1-SNAPSHOT-sources.jar"/>
+	<classpathentry kind="lib" path="D:/Dropbox/uni/BachelorArbeit/Impemetations of Christian Praha/required_jars/required_jars/preon-el-1.1-SNAPSHOT-sources.jar"/>
+	<classpathentry kind="lib" path="D:/Dropbox/uni/BachelorArbeit/Impemetations of Christian Praha/required_jars/required_jars/preon-io-1.1-SNAPSHOT-sources.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

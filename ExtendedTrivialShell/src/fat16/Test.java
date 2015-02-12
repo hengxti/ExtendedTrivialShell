@@ -14,8 +14,12 @@ public class Test {
 		hd.closeDiskFile();
 		System.out.println("Disk formated");
 		
-		FAT16IO.mount(HardDisk.openDisk(".\\Disk\\Harddisk1.bin"));
+		FAT16 fat = FAT16IO.mount(HardDisk.openDisk(".\\Disk\\Harddisk1.bin"));
 		System.out.println("mounted");
+		
+		FAT16IO.flushFAT(hd, fat);
+		System.out.println("fat written");
+		
 	}
 
 }

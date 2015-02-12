@@ -25,7 +25,8 @@ public class FAT16 extends FileSystem {
 	private int dataRegionSize;
 	private int numberofFATentries;
 	
-	@BoundList(size = "fATRegionSize", type = FATEntry.class)
+	//@BoundList(size = "fATRegionSize", type = FATEntry.class)
+	@BoundList(type = FATEntry.class)
 	private FATEntry[] fATEntry;
 	private BootSector bootSector;
 	
@@ -77,6 +78,9 @@ public class FAT16 extends FileSystem {
 		return null;
 	}
 
+	
+	
+	
 	/* ------------- getter & setter Section ------------- */
 	
 	/**
@@ -150,14 +154,14 @@ public class FAT16 extends FileSystem {
 	}
 
 	/**
-	 * @return the fATRegionSiye
+	 * @return the fATRegionSiye [in Sectors]
 	 */
 	public int getfATRegionSize() {
 		return fATRegionSize;
 	}
 
 	/**
-	 * @param fATRegionSiye the fATRegionSiye to set
+	 * @param fATRegionSiye the fATRegionSiye to set [in Sectors]
 	 */
 	public void setfATRegionSize(int fATRegionSiye) {
 		this.fATRegionSize = fATRegionSiye;
