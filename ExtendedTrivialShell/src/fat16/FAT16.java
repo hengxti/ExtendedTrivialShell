@@ -13,8 +13,8 @@ import filesystem.HardDisk;
 
 public class FAT16 extends FileSystem {
 
-	private final int totalSectorCount;
-	private final int countofClusters;
+	private int countofClusters;
+	private int totalSectorCount;
 	
 	private int fATregionStart;
 	private int rootDirectoryRegionStart;
@@ -24,11 +24,17 @@ public class FAT16 extends FileSystem {
 	private int rootDirectorzRegionSize;
 	private int dataRegionSize;
 	private int numberofFATentries;
+	private int maxNumberofDirectoryEntriesPerCluster;
+	private int fATEntriesPerCluster;
+	private int NumberOfSectorsPerFAT;
+	private int numberOfDirEntriesPerCluster;
 	
-	//@BoundList(size = "fATRegionSize", type = FATEntry.class)
-	@BoundList(type = FATEntry.class)
+	//@BoundList(size = "fATRegionSize", type = FATEntry.class) // This is the correctly used code but a bug, prevents it from working
+	// preon is sometimes not able to proccess variable list sizes
+	@BoundList(type = FATEntry.class, size = "8192") //2^16 addresses possible // FIXME variable number
 	private FATEntry[] fATEntry;
 	private BootSector bootSector;
+
 	
 	// access of a file
 	//int FATOffset = n *2; // n .. valid cluster number 
@@ -98,56 +104,56 @@ public class FAT16 extends FileSystem {
 	}
 
 	/**
-	 * @return the fATregionStart
+	 * @return the fATregionStart [Sectors]
 	 */
 	public int getfATregionStart() {
 		return fATregionStart;
 	}
 
 	/**
-	 * @param fATregionStart the fATregionStart to set
+	 * @param fATregionStart the fATregionStart to set [Sectors]
 	 */
 	public void setfATregionStart(int fATregionStart) {
 		this.fATregionStart = fATregionStart;
 	}
 
 	/**
-	 * @return the rootDirectoryRegionStart
+	 * @return the rootDirectoryRegionStart [Sectors]
 	 */
 	public int getRootDirectoryRegionStart() {
 		return rootDirectoryRegionStart;
 	}
 
 	/**
-	 * @param rootDirectoryRegionStart the rootDirectoryRegionStart to set
+	 * @param rootDirectoryRegionStart the rootDirectoryRegionStart to set [Sectors]
 	 */
 	public void setRootDirectoryRegionStart(int rootDirectoryRegionStart) {
 		this.rootDirectoryRegionStart = rootDirectoryRegionStart;
 	}
 
 	/**
-	 * @return the dataRegionStart
+	 * @return the dataRegionStart [Sectors]
 	 */
 	public int getDataRegionStart() {
 		return dataRegionStart;
 	}
 
 	/**
-	 * @param dataRegionStart the dataRegionStart to set
+	 * @param dataRegionStart the dataRegionStart to set [Sectors]
 	 */
 	public void setDataRegionStart(int dataRegionStart) {
 		this.dataRegionStart = dataRegionStart;
 	}
 
 	/**
-	 * @return the reservedRegionSize
+	 * @return the reservedRegionSize [Sectors]
 	 */
 	public int getReservedRegionSize() {
 		return ReservedRegionSize;
 	}
 
 	/**
-	 * @param reservedRegionSize the reservedRegionSize to set
+	 * @param reservedRegionSize the reservedRegionSize to set [Sectors]
 	 */
 	public void setReservedRegionSize(int reservedRegionSize) {
 		ReservedRegionSize = reservedRegionSize;
@@ -168,31 +174,31 @@ public class FAT16 extends FileSystem {
 	}
 
 	/**
-	 * @return the rootDirectorzRegionSiye
+	 * @return the rootDirectorzRegionSize [Sectors]
 	 */
 	public int getRootDirectorzRegionSize() {
 		return rootDirectorzRegionSize;
 	}
 
 	/**
-	 * @param rootDirectorzRegionSiye the rootDirectorzRegionSiye to set
+	 * @param rootDirectorzRegionSiye the rootDirectorzRegionSize to set [Sectors]
 	 */
 	public void setRootDirectorzRegionSize(int rootDirectorzRegionSiye) {
 		this.rootDirectorzRegionSize = rootDirectorzRegionSiye;
 	}
 
 	/**
-	 * @return the dataRegionSiye
+	 * @return the dataRegionSize [Sectors]
 	 */
 	public int getDataRegionSize() {
 		return dataRegionSize;
 	}
 
 	/**
-	 * @param dataRegionSiye the dataRegionSiye to set
+	 * @param dataRegionSize the dataRegionSize to set [Sectors]
 	 */
-	public void setDataRegionSize(int dataRegionSiye) {
-		this.dataRegionSize = dataRegionSiye;
+	public void setDataRegionSize(int dataRegionSize) {
+		this.dataRegionSize = dataRegionSize;
 	}
 
 	/**
@@ -221,6 +227,63 @@ public class FAT16 extends FileSystem {
 	 */
 	public void setfATEntry(FATEntry[] fATEntry) {
 		this.fATEntry = fATEntry;
+	}
+
+	/**
+	 * @return the maxNumberofDirectoryEntriesPerCluster 
+	 */
+	public int getMaxNumberofDirectoryEntriesPerCluster() {
+		return maxNumberofDirectoryEntriesPerCluster;
+	}
+
+	/**
+	 * @return the fATEntriesPerCluster
+	 */
+	public int getfATEntriesPerCluster() {
+		return fATEntriesPerCluster;
+	}
+
+	/**
+	 * @param fATEntriesPerCluster the fATEntriesPerCluster to set
+	 */
+	public void setfATEntriesPerCluster(int fATEntriesPerCluster) {
+		this.fATEntriesPerCluster = fATEntriesPerCluster;
+	}
+
+	/**
+	 * @param maxNumberofDirectoryEntriesPerCluster the maxNumberofDirectoryEntriesPerCluster to set
+	 */
+	public void setMaxNumberofDirectoryEntriesPerCluster(
+			int maxNumberofDirectoryEntriesPerCluster) {
+		this.maxNumberofDirectoryEntriesPerCluster = maxNumberofDirectoryEntriesPerCluster;
+	}
+
+	/**
+	 * @return the numberOfSectorsPerFAT
+	 */
+	public int getNumberOfSectorsPerFAT() {
+		return NumberOfSectorsPerFAT;
+	}
+
+	/**
+	 * @param numberOfSectorsPerFAT the numberOfSectorsPerFAT to set
+	 */
+	public void setNumberOfSectorsPerFAT(int numberOfSectorsPerFAT) {
+		NumberOfSectorsPerFAT = numberOfSectorsPerFAT;
+	}
+
+	/**
+	 * @return the numberOfDirEntriesPerCluster
+	 */
+	public int getNumberOfDirEntriesPerCluster() {
+		return numberOfDirEntriesPerCluster;
+	}
+
+	/**
+	 * @param numberOfDirEntriesPerCluster the numberOfDirEntriesPerCluster to set
+	 */
+	public void setNumberOfDirEntriesPerCluster(int numberOfDirEntriesPerCluster) {
+		this.numberOfDirEntriesPerCluster = numberOfDirEntriesPerCluster;
 	}
 
 	

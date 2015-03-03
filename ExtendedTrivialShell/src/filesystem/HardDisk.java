@@ -5,9 +5,14 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 
 public class HardDisk {
 
+	private static final Logger log = Logger.getLogger(HardDisk.class.getName());
+	
 	public final int NUMBER_OF_HEADS = 1;
 	public final int SECTORS_PER_TRACK = 32;
 	public static final int SECTOR_SIZE_512 = 512;
@@ -28,7 +33,7 @@ public class HardDisk {
 
 	private HardDisk() {
 		sizeInBytes = 0;
-		sectorCnt =0;
+		sectorCnt = 0;
 	}
 
 	private HardDisk(String fullFilePath, int sectorCnt) throws IOException {
@@ -108,7 +113,7 @@ public class HardDisk {
 		if(data.length>sectorSize){
 			throw new IllegalArgumentException("write data too large!");
 		}
-		
+		log.log(Level.FINE, " pos "+pos+" data "+data);
 		FileLock diskLock = fileChannel.lock();
 		diskFile.seek(pos*sectorSize);
 		diskFile.write(data);

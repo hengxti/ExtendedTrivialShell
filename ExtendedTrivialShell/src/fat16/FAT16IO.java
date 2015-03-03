@@ -179,6 +179,10 @@ public final class FAT16IO {
 		fat16.setRootDirectorzRegionSize(((int)Math.ceil((bootSector.getRootEntCnt()*32)/bootSector.getBytesPerSec())));
 		fat16.setDataRegionSize(bootSector.getTotSec16()); // TODO optional implement for 32Bit too
 		fat16.setNumberofFATentries(bootSector.getNumFATs());
+		int clusterSize = bootSector.getSecPerClus() * bootSector.getBytesPerSec();
+		fat16.setfATEntriesPerCluster(clusterSize * 8 / FAT_BIT_SIZE);
+		fat16.setNumberOfDirEntriesPerCluster(clusterSize / DirectoryEntry.SIZE_BYTES);
+		fat16.setMaxNumberofDirectoryEntriesPerCluster(bootSector.getRootEntCnt()/ fat16.getNumberOfDirEntriesPerCluster());
 		fat16.setfATEntry(convertBytesToShorts(readFAT(fat16)));
 		System.out.println(Integer.toHexString(fat16.getfATEntry()[0].getAddress())+" "+Integer.toHexString(fat16.getfATEntry()[1].getAddress())+" "+Integer.toHexString(fat16.getfATEntry()[2].getAddress()));
 		return fat16;
@@ -188,8 +192,8 @@ public final class FAT16IO {
 		System.out.println("region start "+fat16.getfATregionStart() + " and region size "+ fat16.getRootDirectorzRegionSize());
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream(fat16.getBootSector().getFatSz16()); //TODO 32 bit version
 		for (int i = fat16.getfATregionStart(); i<(fat16.getfATregionStart() + fat16.getfATRegionSize()); i++ ){
-			byte[] b = fat16.getDisk().readSector(i);
-			System.out.print(" "+i+"with "+ b);
+			byte[] b = fat16.getDisk().readSector(i);//
+			System.out.print(" "+i+"with "+ b);//
 			buffer.write(fat16.getDisk().readSector(i));
 		}
 		System.out.println(); //FIXME
@@ -199,7 +203,7 @@ public final class FAT16IO {
 	private static FATEntry[] convertBytesToShorts(byte[] data) {
 		FATEntry[] result = new FATEntry[data.length/2];
 		short[] temp = new short[data.length/2];
-		ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(temp); // to turn bytes to shorts as either big endian or little endian. //FIXME check endianess
+		ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(temp); // to turn bytes to shorts as little endian. 
 		for(int i=0;i<data.length/2;i++){
 			short s = temp[i];
 			result[i] = new FATEntry();
@@ -233,7 +237,25 @@ public final class FAT16IO {
 		}
 	}
 	
-	private static void readRootDirectory(FAT16 fat16){
+	private static void readRootDirectory(FAT16 fat16) throws IOException{
+		int rootDirectoryStart = fat16.getRootDirectoryRegionStart();
+		int rootDirectorySize = fat16.getRootDirectorzRegionSize();
+		int directoryEntriesPerCluster = fat16.getBootSector().getRootEntCnt();
+		DirectoryEntry[] directory = new DirectoryEntry[];
+		//readConsecutiveDirectoryCluster(fat16, rootDirectoryStart,rootDirectorySize);
+		int range=
+		Codec<DirectoryEntry> directoryEntryCodec = Codecs.create(DirectoryEntry.class);
+		DirectoryEntry directoryEntry = Codecs.decode(directoryEntryCodec, range);
+		
+	}
+
+	private static void readConsecutiveDirectoryCluster(FAT16 fat16,
+			int rootDirectoryStart, int rootDirectorySize) throws IOException {
+		ByteArrayOutputStream buffer = new ByteArrayOutputStream(rootDirectorySize);
+		for (int i= rootDirectoryStart; i< rootDirectorySize; i++){
+			//readDirectoryCluster
+			buffer.write(fat16.getDisk().readSector(i));
+		}
 		
 	}
 	

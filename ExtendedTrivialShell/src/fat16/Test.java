@@ -11,15 +11,21 @@ public class Test {
 	public static void main(String[] args) throws IOException, DecodingException {
 		HardDisk hd = HardDisk.createDisk(".\\Disk\\Harddisk1.bin", 8192,true);
 		FAT16IO.formatDisk(hd);
-		hd.closeDiskFile();
 		System.out.println("Disk formated");
+		hd.closeDiskFile();
+		System.out.println("Disk closed");
 		
-		FAT16 fat = FAT16IO.mount(HardDisk.openDisk(".\\Disk\\Harddisk1.bin"));
+		//HardDisk hdmounted =HardDisk.openDisk(".\\Disk\\Harddisk1.bin");
+		
+		HardDisk hdmounted =HardDisk.openDisk(".\\Disk\\debug_test_image.bin");
+		FAT16 fat = FAT16IO.mount(hdmounted);
 		System.out.println("mounted");
 		
-		FAT16IO.flushFAT(hd, fat);
+		FAT16IO.flushFAT(hdmounted, fat);
 		System.out.println("fat written");
 		
+		hdmounted.closeDiskFile();
+		System.out.println("Disk closed");
 	}
 
 }
