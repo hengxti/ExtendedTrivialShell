@@ -29,12 +29,13 @@ public class FAT16 extends FileSystem {
 	private int NumberOfSectorsPerFAT;
 	private int numberOfDirEntriesPerCluster;
 	
+	/* ------------- reference section ------------- */
+	private BootSector bootSector;
 	//@BoundList(size = "fATRegionSize", type = FATEntry.class) // This is the correctly used code but a bug, prevents it from working
 	// preon is sometimes not able to proccess variable list sizes
 	@BoundList(type = FATEntry.class, size = "8192") //2^16 addresses possible // FIXME variable number
 	private FATEntry[] fATEntry;
-	private BootSector bootSector;
-
+	private FSdirectoryEntry rootDirectory;
 	
 	// access of a file
 	//int FATOffset = n *2; // n .. valid cluster number 
@@ -227,6 +228,20 @@ public class FAT16 extends FileSystem {
 	 */
 	public void setfATEntry(FATEntry[] fATEntry) {
 		this.fATEntry = fATEntry;
+	}
+
+	/**
+	 * @return the rootDirectory
+	 */
+	public FSdirectoryEntry getRootDirectory() {
+		return rootDirectory;
+	}
+
+	/**
+	 * @param rootDirectory the rootDirectory to set
+	 */
+	public void setRootDirectory(FSdirectoryEntry rootDirectory) {
+		this.rootDirectory = rootDirectory;
 	}
 
 	/**

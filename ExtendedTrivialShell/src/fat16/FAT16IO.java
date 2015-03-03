@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.Random;
 
 import org.codehaus.preon.Codec;
@@ -15,6 +16,7 @@ import org.codehaus.preon.DecodingException;
 import fat.structures.BootSectorFAT16;
 import fat.structures.DirectoryEntry;
 import fat.structures.FATEntry;
+import filesystem.FSdirectoryEntry;
 import filesystem.HardDisk;
 
 
@@ -237,36 +239,47 @@ public final class FAT16IO {
 		}
 	}
 	
-	private static void readRootDirectory(FAT16 fat16) throws IOException{
+	private static void readRootDirectory(FAT16 fat16) throws IOException, DecodingException{
 		int rootDirectoryStart = fat16.getRootDirectoryRegionStart();
 		int rootDirectorySize = fat16.getRootDirectorzRegionSize();
-		int directoryEntriesPerCluster = fat16.getBootSector().getRootEntCnt();
-		DirectoryEntry[] directory = new DirectoryEntry[];
-		//readConsecutiveDirectoryCluster(fat16, rootDirectoryStart,rootDirectorySize);
-		int range=
-		Codec<DirectoryEntry> directoryEntryCodec = Codecs.create(DirectoryEntry.class);
-		DirectoryEntry directoryEntry = Codecs.decode(directoryEntryCodec, range);
+		DirectoryEntry[] directoryEntry;
+		directoryEntry = readConsecutiveDirectoryCluster(fat16, rootDirectoryStart,rootDirectorySize);
+		FSdirectoryEntry rootDir = new FSdirectoryEntry();
+		LinkedList<DirectoryEntry> dirEntryList = new LinkedList<DirectoryEntry>();
+		for(DirectoryEntry d:directoryEntry){
+			dirEntryList.add(d);
+		}
+		rootDir.setDirEntries(dirEntryList);
+		rootDir.setStartClusterIndex((short) 0);
+		fat16.setRootDirectory(rootDir);
 		
 	}
 
-	private static void readConsecutiveDirectoryCluster(FAT16 fat16,
-			int rootDirectoryStart, int rootDirectorySize) throws IOException {
-		ByteArrayOutputStream buffer = new ByteArrayOutputStream(rootDirectorySize);
-		for (int i= rootDirectoryStart; i< rootDirectorySize; i++){
-			//readDirectoryCluster
+	private static DirectoryEntry[] readConsecutiveDirectoryCluster(FAT16 fat16,
+			int directoryStart, int directorySize) throws IOException, DecodingException {
+		Codec<DirectoryEntry> directoryEntryCodec = Codecs.create(DirectoryEntry.class);
+		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+		
+		for (int i= directoryStart; i< directorySize; i++){
 			buffer.write(fat16.getDisk().readSector(i));
 		}
-		
+		final byte[] dirBinary = buffer.toByteArray();
+		DirectoryEntry [] directoryEntry = new DirectoryEntry[fat16.getNumberOfDirEntriesPerCluster()*directorySize];
+		int dirCnt = 0;
+		for (int i= directoryStart; i< directorySize; i+=DirectoryEntry.SIZE_BYTES){	
+			byte[] curdir = Arrays.copyOfRange(dirBinary, i, i+DirectoryEntry.SIZE_BYTES);
+			directoryEntry[dirCnt] = Codecs.decode(directoryEntryCodec, curdir);
+			dirCnt++;
+		}
+		return directoryEntry;
 	}
 	
-/*	private static DirectoryEntry[] readDirectoryCluster(FAT16 fat16, int dataSectorStart, int numOfConsecutiveClusters){
-		
+	private static DirectoryEntry[] readSingleDirectoryCluster(FAT16 fat16,
+			int directoryStartpos) throws IOException, DecodingException{
+		return readConsecutiveDirectoryCluster(fat16,directoryStartpos,1);
 	}
 	
-	public static DirectoryEntry[] readDirectoryCluster(FAT16 fat16, short clusterNumber) throws IOException {
-		
-	}
-	
+/*	
 	public static void writeDataCluster(FAT16 fat16, short clusterNumber, byte[] data) throws IOException {
 		
 	}

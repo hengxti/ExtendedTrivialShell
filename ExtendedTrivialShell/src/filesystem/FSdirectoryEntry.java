@@ -1,6 +1,7 @@
 package filesystem;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 
 public class FSdirectoryEntry {
@@ -8,12 +9,17 @@ public class FSdirectoryEntry {
 	public enum fileTypeEnum{
 		DIRECTORY, FILE;
 	}
-	
+	// TODO check if those are good to be lined through
 	private String fileName;
 	private fileTypeEnum type;
 	private int size;
 	private LocalDateTime creationDate, accessDate, modificationDate;
-	private short permissions;
+	private short permissions; 
+	
+	
+	private List<?> dirEntries;
+	private FSdirectoryEntry parentdir = null;
+	private short startClusterIndex; // FIXME FAT16 specific :/ 
 	
 	
 	public String getFilename() {
@@ -59,6 +65,30 @@ public class FSdirectoryEntry {
 		this.permissions = permissions;
 	}
 	
+	/**
+	 * @return the dirEntries
+	 */
+	public List<?> getDirEntries() {
+		return dirEntries;
+	}
+	/**
+	 * @param dirEntries the dirEntries to set
+	 */
+	public void setDirEntries(List<?> dirEntries) {
+		this.dirEntries = dirEntries;
+	}
+	public FSdirectoryEntry getParentdir() {
+		return parentdir;
+	}
+	public void setParentdir(FSdirectoryEntry parentdir) {
+		this.parentdir = parentdir;
+	}
+	public short getStartClusterIndex() {
+		return startClusterIndex;
+	}
+	public void setStartClusterIndex(short startCluster) {
+		this.startClusterIndex = startCluster;
+	}
 	@Override
 	public String toString() {
 		return "FSdirectoryEntry [fileName=" + fileName + ", type=" + type
