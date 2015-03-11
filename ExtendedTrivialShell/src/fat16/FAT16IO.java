@@ -15,8 +15,8 @@ import org.codehaus.preon.DecodingException;
 
 import fat.structures.BootSectorFAT16;
 import fat.structures.DirectoryEntry;
+import fat.structures.DirectoryLogical;
 import fat.structures.FATEntry;
-import filesystem.FSdirectoryEntry;
 import filesystem.HardDisk;
 
 
@@ -187,6 +187,9 @@ public final class FAT16IO {
 		fat16.setMaxNumberofDirectoryEntriesPerCluster(bootSector.getRootEntCnt()/ fat16.getNumberOfDirEntriesPerCluster());
 		fat16.setfATEntry(convertBytesToShorts(readFAT(fat16)));
 		System.out.println(Integer.toHexString(fat16.getfATEntry()[0].getAddress())+" "+Integer.toHexString(fat16.getfATEntry()[1].getAddress())+" "+Integer.toHexString(fat16.getfATEntry()[2].getAddress()));
+		
+		readRootDirectory(fat16);
+		
 		return fat16;
 	}
 	
@@ -244,7 +247,7 @@ public final class FAT16IO {
 		int rootDirectorySize = fat16.getRootDirectorzRegionSize();
 		DirectoryEntry[] directoryEntry;
 		directoryEntry = readConsecutiveDirectoryCluster(fat16, rootDirectoryStart,rootDirectorySize);
-		FSdirectoryEntry rootDir = new FSdirectoryEntry();
+		DirectoryLogical rootDir = new DirectoryLogical();
 		LinkedList<DirectoryEntry> dirEntryList = new LinkedList<DirectoryEntry>();
 		for(DirectoryEntry d:directoryEntry){
 			dirEntryList.add(d);
@@ -260,15 +263,16 @@ public final class FAT16IO {
 		Codec<DirectoryEntry> directoryEntryCodec = Codecs.create(DirectoryEntry.class);
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 		
-		for (int i= directoryStart; i< directorySize; i++){
+		for (int i= directoryStart; i< directoryStart+directorySize; i++){
 			buffer.write(fat16.getDisk().readSector(i));
 		}
 		final byte[] dirBinary = buffer.toByteArray();
 		DirectoryEntry [] directoryEntry = new DirectoryEntry[fat16.getNumberOfDirEntriesPerCluster()*directorySize];
 		int dirCnt = 0;
-		for (int i= directoryStart; i< directorySize; i+=DirectoryEntry.SIZE_BYTES){	
+		for (int i= 0; i< directoryEntry.length; i+=DirectoryEntry.SIZE_BYTES){	
 			byte[] curdir = Arrays.copyOfRange(dirBinary, i, i+DirectoryEntry.SIZE_BYTES);
-			directoryEntry[dirCnt] = Codecs.decode(directoryEntryCodec, curdir);
+			directoryEntry[dirCnt] = Codecs.decode(directoryEntryCodec, Arrays.copyOfRange(dirBinary, i, i + DirectoryEntry.SIZE_BYTES));
+					//Codecs.decode(directoryEntryCodec, curdir); //FIXME something happens here
 			dirCnt++;
 		}
 		return directoryEntry;

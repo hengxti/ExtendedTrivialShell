@@ -1,9 +1,12 @@
 package fat16;
 
 import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.codehaus.preon.DecodingException;
 
+import filesystem.FSDirectory;
 import filesystem.HardDisk;
 
 public class Test {
@@ -21,8 +24,14 @@ public class Test {
 		FAT16 fat = FAT16IO.mount(hdmounted);
 		System.out.println("mounted");
 		
-		FAT16IO.flushFAT(hdmounted, fat);
-		System.out.println("fat written");
+	//	FAT16IO.flushFAT(hdmounted, fat);
+	//	System.out.println("fat written");
+		
+		System.out.println("list ");
+		List<FSDirectory> l =fat.listdir(null);
+		for(FSDirectory d:l){
+			System.out.println(d.getFilename());
+		}
 		
 		hdmounted.closeDiskFile();
 		System.out.println("Disk closed");

@@ -18,7 +18,7 @@ public abstract class FileSystem {
 	public void setDisk(HardDisk disk) {
 		this.disk = disk;
 	}
-	public abstract List<FSdirectoryEntry> listdir(String path);
+	public abstract List<FSDirectory> listdir(String path);
 	public abstract void mkdir (String path);
 	public abstract void rmdir (String path);
 	

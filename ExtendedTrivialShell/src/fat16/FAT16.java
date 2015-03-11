@@ -1,15 +1,21 @@
 package fat16;
 
+import java.time.LocalDateTime;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.codehaus.preon.annotation.BoundList;
 
 import fat.structures.BootSector;
+import fat.structures.DirectoryEntry;
 import fat.structures.FATEntry;
-import filesystem.FSdirectoryEntry;
+import fat.structures.DirectoryLogical;
+import fat.structures.DirectoryEntry.Attribute;
+import filesystem.FSDirectory;
 import filesystem.FSfile;
 import filesystem.FileSystem;
 import filesystem.HardDisk;
+import filesystem.FSDirectory.fileTypeEnum;
 
 public class FAT16 extends FileSystem {
 
@@ -35,7 +41,7 @@ public class FAT16 extends FileSystem {
 	// preon is sometimes not able to proccess variable list sizes
 	@BoundList(type = FATEntry.class, size = "8192") //2^16 addresses possible // FIXME variable number
 	private FATEntry[] fATEntry;
-	private FSdirectoryEntry rootDirectory;
+	private DirectoryLogical rootDirectory;
 	
 	// access of a file
 	//int FATOffset = n *2; // n .. valid cluster number 
@@ -50,37 +56,59 @@ public class FAT16 extends FileSystem {
 	}
 
 	@Override
-	public List<FSdirectoryEntry> listdir(String path) {
+	public synchronized List<FSDirectory> listdir(String path) {
+		DirectoryLogical rootdir = this.getRootDirectory();
+		LinkedList<FSDirectory> dirList = new LinkedList<FSDirectory>();
+		//TODO path
+		List<DirectoryEntry> rootDir= rootdir.getDirEntries();
+		for(DirectoryEntry d: rootDir){
+			
+			if (!d.isUnallocated()  && !d.isDeleted()){
+				FSDirectory fsDir = new FSDirectory();
+				fsDir.setAccessDate(d.getLastAccessDate().atStartOfDay()); // added time info :/ 
+				fsDir.setCreationDate(LocalDateTime.of(d.getCreateDate(),d.getCreateTime()));
+				fsDir.setFilename(d.getFileName()+d.getFileExtention());
+				fsDir.setModificationDate(d.getWriteDate().atStartOfDay()); // added time info :/
+				//fsDir.setPermissions(); // No permissions
+				fsDir.setSize(d.getFileSize()); 
+				if(d.isAttributeSet(Attribute.DIRECTORY)){
+					fsDir.setType(fileTypeEnum.DIRECTORY);
+				}else{
+					fsDir.setType(fileTypeEnum.FILE);
+				}
+				//TODO introduce other attributes too
+				dirList.add(fsDir);
+			}// skip
+		}
+		return dirList;
+	}
+
+	@Override
+	public synchronized void mkdir(String path) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public synchronized void rmdir(String path) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public synchronized FSfile readFile(String path) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void mkdir(String path) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void rmdir(String path) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public FSfile readFile(String path) {
+	public synchronized FSfile deleteFile(String path) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public FSfile deleteFile(String path) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public FSfile createFile(String path) {
+	public synchronized FSfile createFile(String path) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -233,14 +261,14 @@ public class FAT16 extends FileSystem {
 	/**
 	 * @return the rootDirectory
 	 */
-	public FSdirectoryEntry getRootDirectory() {
+	public DirectoryLogical getRootDirectory() {
 		return rootDirectory;
 	}
 
 	/**
 	 * @param rootDirectory the rootDirectory to set
 	 */
-	public void setRootDirectory(FSdirectoryEntry rootDirectory) {
+	public void setRootDirectory(DirectoryLogical rootDirectory) {
 		this.rootDirectory = rootDirectory;
 	}
 
