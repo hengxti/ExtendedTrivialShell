@@ -270,16 +270,14 @@ public final class FAT16IO {
 		DirectoryEntry [] directoryEntry = new DirectoryEntry[fat16.getNumberOfDirEntriesPerCluster()*directorySize];
 		int dirCnt = 0;
 		for (int i= 0; i< directoryEntry.length; i+=DirectoryEntry.SIZE_BYTES){	
-			byte[] curdir = Arrays.copyOfRange(dirBinary, i, i+DirectoryEntry.SIZE_BYTES);
 			directoryEntry[dirCnt] = Codecs.decode(directoryEntryCodec, Arrays.copyOfRange(dirBinary, i, i + DirectoryEntry.SIZE_BYTES));
-					//Codecs.decode(directoryEntryCodec, curdir); //FIXME something happens here
 			dirCnt++;
 		}
 		return directoryEntry;
 	}
 	
-	private static DirectoryEntry[] readSingleDirectoryCluster(FAT16 fat16,
-			int directoryStartpos) throws IOException, DecodingException{
+	public static DirectoryEntry[] readSingleDirectoryCluster(FAT16 fat16,
+			short directoryStartpos) throws IOException, DecodingException{
 		return readConsecutiveDirectoryCluster(fat16,directoryStartpos,1);
 	}
 	
@@ -300,7 +298,7 @@ public final class FAT16IO {
 		
 	}
 	
-	private static int getAbsoluteDiskSectorNumber(FAT16 fat16, short fatEntryIndex) {
+		private static int getAbsoluteDiskSectorNumber(FAT16 fat16, short fatEntryIndex) {
 		
 	}
 	
@@ -314,7 +312,7 @@ public final class FAT16IO {
 		
 	}
 	
-	private static void writeByteStreamClusteredToDisk(FAT16 fat16, int startCluster, ByteArrayOutputStream baos) throws IOException  {
+		private static void writeByteStreamClusteredToDisk(FAT16 fat16, int startCluster, ByteArrayOutputStream baos) throws IOException  {
 		
 	}
 	*/

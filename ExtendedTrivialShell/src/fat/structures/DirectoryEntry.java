@@ -16,15 +16,19 @@ public class DirectoryEntry {
 	 * @see setFATDate 
 	 * @see setFATTime
 	 */
-	private static final short HOUR_BIT_MASK   = Short.parseShort("1111 1000 0000 0000",2);
-	private static final short MINUTE_BIT_MASK = Short.parseShort("0000 0111 1110 0000",2);
-	private static final short SECOND_BIT_MASK = Short.parseShort("0000 0000 0001 1111",2);
-	private static final short YEAR_BIT_MASK   = Short.parseShort("1111 1110 0000 0000",2);
-	private static final short MONTH_BIT_MASK  = Short.parseShort("0000 0001 1110 0000",2);
-	private static final short DAY_BIT_MASK    = Short.parseShort("0000 0000 0001 1111",2);
+	
+	// first bit 1 is equivalent to '-', , due to the tow's complement in Short. Note java does not offer unsigned short :/
+	private static final short HOUR_BIT_MASK   = Short.parseShort("-111 1000 0000 0000".replaceAll("\\s+",""),2);
+	private static final short MINUTE_BIT_MASK = Short.parseShort("0000 0111 1110 0000".replaceAll("\\s+",""),2);
+	private static final short SECOND_BIT_MASK = Short.parseShort("0000 0000 0001 1111".replaceAll("\\s+",""),2);
+	private static final short YEAR_BIT_MASK   = Short.parseShort("-111 1110 0000 0000".replaceAll("\\s+",""),2);
+	private static final short MONTH_BIT_MASK  = Short.parseShort("0000 0001 1110 0000".replaceAll("\\s+",""),2);
+	private static final short DAY_BIT_MASK    = Short.parseShort("0000 0000 0001 1111".replaceAll("\\s+",""),2);
 	
 	public static final byte DELETED_MARK = (byte) 0xE5;
 	public static final byte UNALLOCATED_MARK = (byte) 0x00;
+	
+	private static final short MINIMUM_DATE = 0x2100;
 
 	public static final int SIZE_BYTES = 32;
 	
@@ -73,7 +77,7 @@ public class DirectoryEntry {
 	 *
 	 */
 	@BoundString(size="11", encoding=Encoding.ISO_8859_1)
-	private String fileName;
+	private String fileName = " ";
 	
 	@BoundString(size="8")
 	private byte attributes = 0; 
@@ -92,20 +96,20 @@ public class DirectoryEntry {
 	 * 10 000 000 ns = 10 ms
 	 */
 	@BoundString(size="8")
-	private final byte createTimeMSstamp;  
+	private byte createTimeMSstamp=0;  
 	
 	@BoundString(size="16")
-	private final short createTime; 
+	private short createTime=0; 
 	
 	@BoundString(size="16")
-	private final short createDate;
+	private short createDate=MINIMUM_DATE;
 
 	/**
 	 * Last access date. Note that there is no last access time, only a date. This is the date of 
 	 * last read or write. In the case of a write, this should be set to the same date as DIR_WrtDate.
 	 */
 	@BoundString(size="16")
-	private short lastAccessDate; 
+	private short lastAccessDate= MINIMUM_DATE; 
 	
 	/**
 	 * High word of this entry’s first cluster number (always 0 for a FAT12 or FAT16 volume).
@@ -118,13 +122,13 @@ public class DirectoryEntry {
 	 * Time of last write. Note that file creation is considered a write.
 	 */
 	@BoundString(size="16")
-	private short writeTime; 
+	private short writeTime=0; 
 	
 	/**
 	 * Date of last write. Note that file creation is considered a write.
 	 */
 	@BoundString(size="16")
-	private short writeDate;
+	private short writeDate=MINIMUM_DATE;
 	
 	/**
 	 * This address is to be used in the FAT. Also firstClusterLowByte
@@ -140,6 +144,9 @@ public class DirectoryEntry {
 	
 	// long file name only available in FAT 32
 	
+	public DirectoryEntry(){
+		
+	}
 	
 	public DirectoryEntry(String fileName, short startCluster, int fileSize, Attribute...attributes) {
 
@@ -196,7 +203,7 @@ public class DirectoryEntry {
 	 */
 	private short setFATDate(LocalDateTime dateTime) {
 		short date = 0;
-		date |= dateTime.getDayOfMonth();
+		date |= dateTime.getDayOfMonth()-1;
 		date |= dateTime.getMonthValue()<<5;
 		date |= (dateTime.getYear()-1980)<<9;
 		return date;
@@ -244,7 +251,7 @@ public class DirectoryEntry {
 	 * @return the fileExtention
 	 */
 	public String getFileExtention() {
-		return fileName.substring(8, 11);
+		return fileName.substring(7, 10);
 	}
 
 	/**
@@ -297,7 +304,7 @@ public class DirectoryEntry {
 	}
 	
 	private LocalDate getFATDate(short date) {
-		LocalDate ld = LocalDate.of((date & YEAR_BIT_MASK)>>>9 + 1980, (date & MONTH_BIT_MASK)>>>5, (date & DAY_BIT_MASK));
+		LocalDate ld = LocalDate.of((date & YEAR_BIT_MASK)>>>9 + 1980, (date & MONTH_BIT_MASK)>>>5, (date & DAY_BIT_MASK)+1);
 		return ld;
 	}
 
@@ -369,6 +376,9 @@ public class DirectoryEntry {
 	}
 	
 	public boolean isUnallocated(){
+		if(this.fileName.getBytes().length ==0){
+			return true;
+		}
 		return this.fileName.getBytes()[0] == DirectoryEntry.UNALLOCATED_MARK;
 	}
 
@@ -383,6 +393,19 @@ public class DirectoryEntry {
 			e.printStackTrace();
 			System.exit(1);
 		}
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "DirectoryEntry [fileName=" + fileName + ", attributes="
+				+ attributes + ", createTimeMSstamp=" + createTimeMSstamp
+				+ ", createTime=" + createTime + ", createDate=" + createDate
+				+ ", lastAccessDate=" + lastAccessDate + ", writeTime="
+				+ writeTime + ", writeDate=" + writeDate + ", startCluster="
+				+ startCluster + ", fileSize=" + fileSize + "]";
 	}
 	
 	

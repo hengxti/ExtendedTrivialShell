@@ -4,7 +4,10 @@ import java.util.List;
 
 public class DirectoryLogical {
 	
+	private DirectoryLogical parentdir = null;
+	private short startClusterIndex;
 	private List<DirectoryEntry> dirEntries;
+
 	/**
 	 * @return the dirEntries
 	 */
@@ -41,6 +44,14 @@ public class DirectoryLogical {
 	public void setStartClusterIndex(short startClusterIndex) {
 		this.startClusterIndex = startClusterIndex;
 	}
-	private DirectoryLogical parentdir = null;
-	private short startClusterIndex;
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "DirectoryLogical [parentdir=" + parentdir
+				+ ", startClusterIndex=" + startClusterIndex + ", dirEntries="
+				+ dirEntries + "]";
+	}
+	
 }

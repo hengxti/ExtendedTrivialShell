@@ -1,6 +1,9 @@
 package filesystem;
 
+import java.io.IOException;
 import java.util.List;
+
+import org.codehaus.preon.DecodingException;
 
 public abstract class FileSystem {
 	
@@ -18,7 +21,7 @@ public abstract class FileSystem {
 	public void setDisk(HardDisk disk) {
 		this.disk = disk;
 	}
-	public abstract List<FSDirectory> listdir(String path);
+	public abstract List<FSDirectory> listdir(String path) throws DecodingException, IOException;
 	public abstract void mkdir (String path);
 	public abstract void rmdir (String path);
 	

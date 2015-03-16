@@ -28,7 +28,7 @@ public class Test {
 	//	System.out.println("fat written");
 		
 		System.out.println("list ");
-		List<FSDirectory> l =fat.listdir(null);
+		List<FSDirectory> l =fat.listdir("\\INROOT2\\"); // \\INROOT2\\
 		for(FSDirectory d:l){
 			System.out.println(d.getFilename());
 		}

@@ -1,9 +1,12 @@
 package fat16;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.codehaus.preon.DecodingException;
 import org.codehaus.preon.annotation.BoundList;
 
 import fat.structures.BootSector;
@@ -11,6 +14,7 @@ import fat.structures.DirectoryEntry;
 import fat.structures.FATEntry;
 import fat.structures.DirectoryLogical;
 import fat.structures.DirectoryEntry.Attribute;
+import fat.structures.Path;
 import filesystem.FSDirectory;
 import filesystem.FSfile;
 import filesystem.FileSystem;
@@ -54,20 +58,38 @@ public class FAT16 extends FileSystem {
 		this.bootSector = bootSector; 
 		this.setDisk(hardDisk);
 	}
+	
+	/** 
+	 * @param path canonical path without drive letter
+	 * @throws IOException 
+	 * @throws DecodingException 
+	 * */
 
 	@Override
-	public synchronized List<FSDirectory> listdir(String path) {
-		DirectoryLogical rootdir = this.getRootDirectory();
+	public synchronized List<FSDirectory> listdir(String path) throws DecodingException, IOException {
+		DirectoryLogical curdir = this.getRootDirectory();
+		// Traverse path 
+		Path p = new Path(path);
+		for(String dirString:p.getDirectories()){ // for each folder in the path
+			curdir = getSubDirectoryEntrybyName(dirString,curdir);
+		}
+		
+		System.out.println(curdir);
+		
 		LinkedList<FSDirectory> dirList = new LinkedList<FSDirectory>();
-		//TODO path
-		List<DirectoryEntry> rootDir= rootdir.getDirEntries();
-		for(DirectoryEntry d: rootDir){
-			
-			if (!d.isUnallocated()  && !d.isDeleted()){
+		List<DirectoryEntry> dir= curdir.getDirEntries(); 
+		//debug 
+				System.out.println(dir);
+				
+		for(DirectoryEntry d: dir){
+			if(d == null){
+				continue; // maybe change to break; ?!
+			}
+			if (!d.isUnallocated()  && !d.isDeleted()){ // don't list if unallocated or deleted
 				FSDirectory fsDir = new FSDirectory();
 				fsDir.setAccessDate(d.getLastAccessDate().atStartOfDay()); // added time info :/ 
 				fsDir.setCreationDate(LocalDateTime.of(d.getCreateDate(),d.getCreateTime()));
-				fsDir.setFilename(d.getFileName()+d.getFileExtention());
+				fsDir.setFilename(d.getFileName());
 				fsDir.setModificationDate(d.getWriteDate().atStartOfDay()); // added time info :/
 				//fsDir.setPermissions(); // No permissions
 				fsDir.setSize(d.getFileSize()); 
@@ -83,6 +105,22 @@ public class FAT16 extends FileSystem {
 		return dirList;
 	}
 
+	private DirectoryLogical getSubDirectoryEntrybyName(String dirName, DirectoryLogical curdir) throws DecodingException, IOException{
+		DirectoryLogical targetdir=new DirectoryLogical();
+		for(DirectoryEntry d:curdir.getDirEntries()){
+			System.out.println("cur entry: "+d.getFileName() + " compared to "+ dirName);
+			if(d.getFileName().equals(dirName)){
+				System.out.println(" equal! ");
+				targetdir.setStartClusterIndex(d.getStartCluster());
+				targetdir.setParentdir(curdir);
+				DirectoryEntry[] dirEntries= FAT16IO.readSingleDirectoryCluster(this, d.getStartCluster());
+				targetdir.setDirEntries(Arrays.asList(dirEntries));
+				return targetdir;
+			}
+		}
+		throw new IllegalArgumentException("no such directory found");
+	}
+	
 	@Override
 	public synchronized void mkdir(String path) {
 		// TODO Auto-generated method stub
