@@ -43,7 +43,7 @@ public class FAT16 extends FileSystem {
 	private BootSector bootSector;
 	//@BoundList(size = "fATRegionSize", type = FATEntry.class) // This is the correctly used code but a bug, prevents it from working
 	// preon is sometimes not able to proccess variable list sizes
-	@BoundList(type = FATEntry.class, size = "8192") //2^16 addresses possible // FIXME variable number
+	// @BoundList(type = FATEntry.class, size = "8192") //2^16 addresses possible // FIXME variable number
 	private FATEntry[] fAT;
 	private DirectoryLogical rootDirectory;
 	
@@ -130,10 +130,11 @@ public class FAT16 extends FileSystem {
 	
 	public List<Short> getFATEntryIndexList(short startCluster) {
 		List<Short> entryIndexList = new LinkedList<Short>();
-		Short curAddress = this.fAT[startCluster].getAddress();
+		entryIndexList.add(startCluster);
+		Short curAddress = this.fAT[startCluster+FATEntry.VALID_START].getAddress();
 		while(curAddress != FATEntry.EOC){
 			entryIndexList.add(curAddress);
-			curAddress = fAT[curAddress].getAddress();
+			curAddress = fAT[curAddress+FATEntry.VALID_START].getAddress();
 		}
 		return entryIndexList;
 	}

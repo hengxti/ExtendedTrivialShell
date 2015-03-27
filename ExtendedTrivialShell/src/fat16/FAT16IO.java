@@ -186,13 +186,25 @@ public final class FAT16IO {
 		fat16.setNumberOfDirEntriesPerCluster(clusterSize / DirectoryEntry.SIZE_BYTES);
 		fat16.setMaxNumberofDirectoryEntriesPerCluster(bootSector.getRootEntCnt()/ fat16.getNumberOfDirEntriesPerCluster());
 		fat16.setfATEntry(convertBytesToShorts(readFAT(fat16)));
-		System.out.println(Integer.toHexString(fat16.getfATEntry()[0].getAddress())+" "+Integer.toHexString(fat16.getfATEntry()[1].getAddress())+" "+Integer.toHexString(fat16.getfATEntry()[2].getAddress()));
+		FATEntry[] fattest = fat16.getfATEntry();
+		//System.out.println("0x" + Integer.toHexString(fat16.getfATEntry()[0].getAddress())+" 0x"+Integer.toHexString(fat16.getfATEntry()[1].getAddress())+" 0x"+Integer.toHexString(fat16.getfATEntry()[2].getAddress()));
+		
+		printfatIndex(fat16,8);
 		
 		readRootDirectory(fat16);
 		
 		return fat16;
 	}
 	
+	private static void printfatIndex(FAT16 fat16, int numOfEntries) {
+		for(int i=0;i<numOfEntries;i++){
+			System.out.print(Integer.toHexString(fat16.getfATEntry()[i].getAddress())+" ");
+			if((i+1)%8==0&&i>0){
+				System.out.println();
+			}
+		}
+	}
+
 	private static byte[] readFAT(FAT16 fat16) throws IOException{
 		System.out.println("region start "+fat16.getfATregionStart() + " and region size "+ fat16.getRootDirectorzRegionSize());
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream(fat16.getBootSector().getFatSz16()); //TODO 32 bit version
@@ -219,9 +231,11 @@ public final class FAT16IO {
 	
 	public static void flushFAT(HardDisk hardDisk, FAT16 fat16) throws IOException {
 		// note that one fat has several clusters in size 
-		Codec<FAT16> FAT16Codec = Codecs.create(FAT16.class);
+		Codec<FATEntry> fATEntryCodec = Codecs.create(FATEntry.class);
 		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-		Codecs.encode(fat16, FAT16Codec, byteArrayOutputStream);
+		for(FATEntry fatEntry:fat16.getfATEntry()){
+			Codecs.encode(fatEntry, fATEntryCodec, byteArrayOutputStream);
+		}
 		
 		// this is writing the first fat to the image file on the hard disk as it is in memory
 		writeConsecutiveClusters(hardDisk, fat16, byteArrayOutputStream, fat16.getfATregionStart()/*should be 1*/);
@@ -287,7 +301,9 @@ public final class FAT16IO {
 	private static int getOffsetCorrectedDiskSectorNumber(FAT16 fat16,
 			short fATIndex) {
 		// The first 2 sectors have special purpose and should be ignored for File and Directory access
-		return fat16.getDataRegionStart()+fATIndex - FATEntry.VALID_START;
+		int absoluteAddress =fat16.getDataRegionStart()+fATIndex + FATEntry.VALID_START;
+		System.out.println("offset " +Integer.toHexString(absoluteAddress*HardDisk.SECTOR_SIZE_512)+"("+absoluteAddress+")"+" getDataRegionStart " +fat16.getDataRegionStart()+ " fATIndex " +fATIndex);
+		return absoluteAddress;
 	}
 	
 /*	
