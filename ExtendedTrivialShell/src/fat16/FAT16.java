@@ -44,7 +44,7 @@ public class FAT16 extends FileSystem {
 	//@BoundList(size = "fATRegionSize", type = FATEntry.class) // This is the correctly used code but a bug, prevents it from working
 	// preon is sometimes not able to proccess variable list sizes
 	@BoundList(type = FATEntry.class, size = "8192") //2^16 addresses possible // FIXME variable number
-	private FATEntry[] fATEntry;
+	private FATEntry[] fAT;
 	private DirectoryLogical rootDirectory;
 	
 	// access of a file
@@ -74,7 +74,7 @@ public class FAT16 extends FileSystem {
 			curdir = getSubDirectoryEntrybyName(dirString,curdir);
 		}
 		
-		System.out.println(curdir);
+		System.out.println("curdir logical"+curdir);
 		
 		LinkedList<FSDirectory> dirList = new LinkedList<FSDirectory>();
 		List<DirectoryEntry> dir= curdir.getDirEntries(); 
@@ -106,14 +106,21 @@ public class FAT16 extends FileSystem {
 	}
 
 	private DirectoryLogical getSubDirectoryEntrybyName(String dirName, DirectoryLogical curdir) throws DecodingException, IOException{
-		DirectoryLogical targetdir=new DirectoryLogical();
-		for(DirectoryEntry d:curdir.getDirEntries()){
-			System.out.println("cur entry: "+d.getFileName() + " compared to "+ dirName);
-			if(d.getFileName().equals(dirName)){
+		for(DirectoryEntry dirEntry:curdir.getDirEntries()){
+			System.out.println("cur entry: "+dirEntry.getFileName() + " compared to "+ dirName);
+			if(dirEntry.getFileName().equals(dirName)){
 				System.out.println(" equal! ");
-				targetdir.setStartClusterIndex(d.getStartCluster());
+				DirectoryLogical targetdir=new DirectoryLogical();
+				List<Short> entryIndexList = this.getFATEntryIndexList(dirEntry.getStartCluster());
+				targetdir.setStartClusterIndex(dirEntry.getStartCluster());
+				for(short curIndexAddress : entryIndexList){
+					DirectoryEntry[] nextDirEntries = FAT16IO.readSingleDirectoryCluster(this,curIndexAddress);
+					for(DirectoryEntry nextDirEntry : nextDirEntries){
+						targetdir.getDirEntries().add(nextDirEntry);
+					}
+				}
 				targetdir.setParentdir(curdir);
-				DirectoryEntry[] dirEntries= FAT16IO.readSingleDirectoryCluster(this, d.getStartCluster());
+				DirectoryEntry[] dirEntries= FAT16IO.readSingleDirectoryCluster(this, dirEntry.getStartCluster());
 				targetdir.setDirEntries(Arrays.asList(dirEntries));
 				return targetdir;
 			}
@@ -121,6 +128,16 @@ public class FAT16 extends FileSystem {
 		throw new IllegalArgumentException("no such directory found");
 	}
 	
+	public List<Short> getFATEntryIndexList(short startCluster) {
+		List<Short> entryIndexList = new LinkedList<Short>();
+		Short curAddress = this.fAT[startCluster].getAddress();
+		while(curAddress != FATEntry.EOC){
+			entryIndexList.add(curAddress);
+			curAddress = fAT[curAddress].getAddress();
+		}
+		return entryIndexList;
+	}
+
 	@Override
 	public synchronized void mkdir(String path) {
 		// TODO Auto-generated method stub
@@ -195,6 +212,7 @@ public class FAT16 extends FileSystem {
 	 * @param rootDirectoryRegionStart the rootDirectoryRegionStart to set [Sectors]
 	 */
 	public void setRootDirectoryRegionStart(int rootDirectoryRegionStart) {
+		//System.out.println("Rootdirectory Region Start set to "+rootDirectoryRegionStart);
 		this.rootDirectoryRegionStart = rootDirectoryRegionStart;
 	}
 
@@ -286,14 +304,14 @@ public class FAT16 extends FileSystem {
 	 * @return the fATEntry
 	 */
 	public FATEntry[] getfATEntry() {
-		return fATEntry;
+		return fAT;
 	}
 
 	/**
 	 * @param fATEntry the fATEntry to set
 	 */
 	public void setfATEntry(FATEntry[] fATEntry) {
-		this.fATEntry = fATEntry;
+		this.fAT = fATEntry;
 	}
 
 	/**

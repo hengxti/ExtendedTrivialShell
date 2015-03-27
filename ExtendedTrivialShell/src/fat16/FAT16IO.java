@@ -247,13 +247,14 @@ public final class FAT16IO {
 		int rootDirectorySize = fat16.getRootDirectorzRegionSize();
 		DirectoryEntry[] directoryEntry;
 		directoryEntry = readConsecutiveDirectoryCluster(fat16, rootDirectoryStart,rootDirectorySize);
+		System.out.println("Rootdir entries after mount: "+directoryEntry);
 		DirectoryLogical rootDir = new DirectoryLogical();
 		LinkedList<DirectoryEntry> dirEntryList = new LinkedList<DirectoryEntry>();
 		for(DirectoryEntry d:directoryEntry){
 			dirEntryList.add(d);
 		}
 		rootDir.setDirEntries(dirEntryList);
-		rootDir.setStartClusterIndex((short) 0);
+		rootDir.setStartClusterIndex((short)fat16.getRootDirectoryRegionStart()); // (short) 0
 		fat16.setRootDirectory(rootDir);
 		
 	}
@@ -277,8 +278,16 @@ public final class FAT16IO {
 	}
 	
 	public static DirectoryEntry[] readSingleDirectoryCluster(FAT16 fat16,
-			short directoryStartpos) throws IOException, DecodingException{
-		return readConsecutiveDirectoryCluster(fat16,directoryStartpos,1);
+			short directoryEntryStartpos) throws IOException, DecodingException{
+		
+		int absoluteSectorNumber = getOffsetCorrectedDiskSectorNumber(fat16, directoryEntryStartpos);
+		return readConsecutiveDirectoryCluster(fat16,absoluteSectorNumber,1);
+	}
+
+	private static int getOffsetCorrectedDiskSectorNumber(FAT16 fat16,
+			short fATIndex) {
+		// The first 2 sectors have special purpose and should be ignored for File and Directory access
+		return fat16.getDataRegionStart()+fATIndex - FATEntry.VALID_START;
 	}
 	
 /*	
