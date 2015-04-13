@@ -41,9 +41,6 @@ public class FAT16 extends FileSystem {
 	
 	/* ------------- reference section ------------- */
 	private BootSector bootSector;
-	//@BoundList(size = "fATRegionSize", type = FATEntry.class) // This is the correctly used code but a bug, prevents it from working
-	// preon is sometimes not able to proccess variable list sizes
-	// @BoundList(type = FATEntry.class, size = "8192") //2^16 addresses possible // FIXME variable number
 	private FATEntry[] fAT;
 	private DirectoryLogical rootDirectory;
 	

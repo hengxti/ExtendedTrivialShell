@@ -1,12 +1,13 @@
 package fat.structures;
 
+import java.util.LinkedList;
 import java.util.List;
 
 public class DirectoryLogical {
 	
 	private DirectoryLogical parentdir = null;
 	private short startClusterIndex;
-	private List<DirectoryEntry> dirEntries;
+	private List<DirectoryEntry> dirEntries = new LinkedList<DirectoryEntry>();
 
 	/**
 	 * @return the dirEntries

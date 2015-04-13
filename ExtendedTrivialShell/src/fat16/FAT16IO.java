@@ -175,6 +175,7 @@ public final class FAT16IO {
 		FAT16 fat16 = new FAT16(totalSectorCount, countofClusters, hardDisk, bootSector); // move variables in fat16
 		fat16.setfATregionStart(bootSector.getHiddSec()/*should be 0*/+bootSector.getRsvdSecCnt()); /*Volume start = 0 + Reserved sectors = 1*/
 		fat16.setRootDirectoryRegionStart(fat16.getfATregionStart()+bootSector.getNumFATs()*bootSector.getFatSz16());
+		int tmp = fat16.getRootDirectoryRegionStart() +((int)Math.ceil((bootSector.getRootEntCnt()*32)/bootSector.getBytesPerSec()));
 		fat16.setDataRegionStart(fat16.getRootDirectoryRegionStart() +((int)Math.ceil((bootSector.getRootEntCnt()*32)/bootSector.getBytesPerSec()))); // division rounded up
 		fat16.setReservedRegionSize(bootSector.getRsvdSecCnt());
 		fat16.setfATRegionSize(bootSector.getNumFATs()*bootSector.getFatSz16());
@@ -186,8 +187,6 @@ public final class FAT16IO {
 		fat16.setNumberOfDirEntriesPerCluster(clusterSize / DirectoryEntry.SIZE_BYTES);
 		fat16.setMaxNumberofDirectoryEntriesPerCluster(bootSector.getRootEntCnt()/ fat16.getNumberOfDirEntriesPerCluster());
 		fat16.setfATEntry(convertBytesToShorts(readFAT(fat16)));
-		FATEntry[] fattest = fat16.getfATEntry();
-		//System.out.println("0x" + Integer.toHexString(fat16.getfATEntry()[0].getAddress())+" 0x"+Integer.toHexString(fat16.getfATEntry()[1].getAddress())+" 0x"+Integer.toHexString(fat16.getfATEntry()[2].getAddress()));
 		
 		printfatIndex(fat16,8);
 		
@@ -259,12 +258,12 @@ public final class FAT16IO {
 	private static void readRootDirectory(FAT16 fat16) throws IOException, DecodingException{
 		int rootDirectoryStart = fat16.getRootDirectoryRegionStart();
 		int rootDirectorySize = fat16.getRootDirectorzRegionSize();
-		DirectoryEntry[] directoryEntry;
-		directoryEntry = readConsecutiveDirectoryCluster(fat16, rootDirectoryStart,rootDirectorySize);
-		System.out.println("Rootdir entries after mount: "+directoryEntry);
+		DirectoryEntry[] directoryEntries;
+		directoryEntries = readConsecutiveDirectoryCluster(fat16, rootDirectoryStart,rootDirectorySize);
+		System.out.println("Rootdir entries after mount: "+directoryEntries);
 		DirectoryLogical rootDir = new DirectoryLogical();
 		LinkedList<DirectoryEntry> dirEntryList = new LinkedList<DirectoryEntry>();
-		for(DirectoryEntry d:directoryEntry){
+		for(DirectoryEntry d:directoryEntries){
 			dirEntryList.add(d);
 		}
 		rootDir.setDirEntries(dirEntryList);
@@ -284,8 +283,12 @@ public final class FAT16IO {
 		final byte[] dirBinary = buffer.toByteArray();
 		DirectoryEntry [] directoryEntry = new DirectoryEntry[fat16.getNumberOfDirEntriesPerCluster()*directorySize];
 		int dirCnt = 0;
-		for (int i= 0; i< directoryEntry.length; i+=DirectoryEntry.SIZE_BYTES){	
-			directoryEntry[dirCnt] = Codecs.decode(directoryEntryCodec, Arrays.copyOfRange(dirBinary, i, i + DirectoryEntry.SIZE_BYTES));
+		for (int i= 0; i< directoryEntry.length; i+=DirectoryEntry.SIZE_BYTES){
+			byte[] binaryEntry = Arrays.copyOfRange(dirBinary, i, i + DirectoryEntry.SIZE_BYTES);
+			for(byte b:binaryEntry){
+			System.out.print(Integer.toHexString((int)b)+" ");
+			}
+			directoryEntry[dirCnt] = Codecs.decode(directoryEntryCodec, binaryEntry);
 			dirCnt++;
 		}
 		return directoryEntry;
@@ -323,11 +326,6 @@ public final class FAT16IO {
 		
 	}
 	
-		private static int getAbsoluteDiskSectorNumber(FAT16 fat16, short fatEntryIndex) {
-		
-	}
-	
-
 	
 	public static void flushRootDirectory(FAT16 fat16) throws IOException  {
 		

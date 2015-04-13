@@ -28,9 +28,9 @@ public class Test {
 	//	System.out.println("fat written");
 		
 		System.out.println("list ");
-		List<FSDirectory> l =fat.listdir("\\INROOT2\\"); // \\INROOT2\\
+		List<FSDirectory> l =fat.listdir("\\INROOT1\\"); // \\INROOT2\\
 		for(FSDirectory d:l){
-			System.out.println(d.getFilename());
+			System.out.println("\nPrintdir beginn" +d.getFilename());
 		}
 		
 		hdmounted.closeDiskFile();
