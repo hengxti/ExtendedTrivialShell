@@ -80,7 +80,7 @@ public class DirectoryEntry {
 	private String fileName = " ";
 	
 	@BoundString(size="8")
-	private byte attributes = 0; 
+	private byte attributes; 
 
 	/**
 	 *  This is 0 and never used.
@@ -96,10 +96,10 @@ public class DirectoryEntry {
 	 * 10 000 000 ns = 10 ms
 	 */
 	@BoundString(size="8")
-	private byte createTimeMSstamp=0;  
+	private byte createTimeMSstamp;  
 	
 	@BoundString(size="16")
-	private short createTime=0; 
+	private short createTime; 
 	
 	@BoundString(size="16")
 	private short createDate=MINIMUM_DATE;
@@ -122,7 +122,7 @@ public class DirectoryEntry {
 	 * Time of last write. Note that file creation is considered a write.
 	 */
 	@BoundString(size="16")
-	private short writeTime=0; 
+	private short writeTime; 
 	
 	/**
 	 * Date of last write. Note that file creation is considered a write.
@@ -134,13 +134,13 @@ public class DirectoryEntry {
 	 * This address is to be used in the FAT. Also firstClusterLowByte
 	 */
 	@BoundString(size="16")
-	private short startCluster = 0;
+	private short startCluster;
 	
 	/**
 	 * File size in bytes
 	 */
 	@BoundString(size="32")
-	private int fileSize = 0;
+	private int fileSize;
 	
 	// long file name only available in FAT 32
 	

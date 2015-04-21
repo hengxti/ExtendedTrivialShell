@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Random;
 
+import org.apache.log4j.Logger;
 import org.codehaus.preon.Codec;
 import org.codehaus.preon.Codecs;
 import org.codehaus.preon.DecodingException;
@@ -21,7 +22,9 @@ import filesystem.HardDisk;
 
 
 public final class FAT16IO {
-	
+	private static final Logger logger =
+	        Logger.getLogger(FAT16IO.class.getName());
+
 	private static final String oemName = "MSWIN4.1"; // for compatibility reasons
 	private static final byte SECTORS_PER_CLUSTER = 1;
 	private static final byte RESERVED_SECTOR_COUNT = 1;
@@ -205,14 +208,13 @@ public final class FAT16IO {
 	}
 
 	private static byte[] readFAT(FAT16 fat16) throws IOException{
-		System.out.println("region start "+fat16.getfATregionStart() + " and region size "+ fat16.getRootDirectorzRegionSize());
+		logger.info("region start "+fat16.getfATregionStart() + " and region size "+ fat16.getRootDirectorzRegionSize());
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream(fat16.getBootSector().getFatSz16()); //TODO 32 bit version
 		for (int i = fat16.getfATregionStart(); i<(fat16.getfATregionStart() + fat16.getfATRegionSize()); i++ ){
-			byte[] b = fat16.getDisk().readSector(i);//
-			System.out.print(" "+i+"with "+ b);//
+//			byte[] b = fat16.getDisk().readSector(i);
+//			logger.info(" "+i+" with "+ b[i]);
 			buffer.write(fat16.getDisk().readSector(i));
 		}
-		System.out.println(); //FIXME
 		return buffer.toByteArray();
 	}
 
@@ -260,7 +262,7 @@ public final class FAT16IO {
 		int rootDirectorySize = fat16.getRootDirectorzRegionSize();
 		DirectoryEntry[] directoryEntries;
 		directoryEntries = readConsecutiveDirectoryCluster(fat16, rootDirectoryStart,rootDirectorySize);
-		System.out.println("Rootdir entries after mount: "+directoryEntries);
+		logger.info("Rootdir entries after mount: "+directoryEntries);
 		DirectoryLogical rootDir = new DirectoryLogical();
 		LinkedList<DirectoryEntry> dirEntryList = new LinkedList<DirectoryEntry>();
 		for(DirectoryEntry d:directoryEntries){
@@ -282,14 +284,12 @@ public final class FAT16IO {
 		}
 		final byte[] dirBinary = buffer.toByteArray();
 		DirectoryEntry [] directoryEntry = new DirectoryEntry[fat16.getNumberOfDirEntriesPerCluster()*directorySize];
-		int dirCnt = 0;
-		for (int i= 0; i< directoryEntry.length; i+=DirectoryEntry.SIZE_BYTES){
-			byte[] binaryEntry = Arrays.copyOfRange(dirBinary, i, i + DirectoryEntry.SIZE_BYTES);
-			for(byte b:binaryEntry){
-			System.out.print(Integer.toHexString((int)b)+" ");
-			}
-			directoryEntry[dirCnt] = Codecs.decode(directoryEntryCodec, binaryEntry);
-			dirCnt++;
+		for (int i= 0; i< directoryEntry.length; i++){
+			byte[] binaryEntry = Arrays.copyOfRange(dirBinary, i*DirectoryEntry.SIZE_BYTES, i*DirectoryEntry.SIZE_BYTES + DirectoryEntry.SIZE_BYTES);
+//			for(byte b:binaryEntry){
+//				logger.debug(Integer.toHexString((int)b)+" ");
+//			}
+			directoryEntry[i] = Codecs.decode(directoryEntryCodec, binaryEntry);
 		}
 		return directoryEntry;
 	}
@@ -305,7 +305,7 @@ public final class FAT16IO {
 			short fATIndex) {
 		// The first 2 sectors have special purpose and should be ignored for File and Directory access
 		int absoluteAddress =fat16.getDataRegionStart()+fATIndex + FATEntry.VALID_START;
-		System.out.println("offset " +Integer.toHexString(absoluteAddress*HardDisk.SECTOR_SIZE_512)+"("+absoluteAddress+")"+" getDataRegionStart " +fat16.getDataRegionStart()+ " fATIndex " +fATIndex);
+		logger.debug("offset " +Integer.toHexString(absoluteAddress*HardDisk.SECTOR_SIZE_512)+"("+absoluteAddress+")"+" getDataRegionStart " +fat16.getDataRegionStart()+ " fATIndex " +fATIndex);
 		return absoluteAddress;
 	}
 	

@@ -12,11 +12,11 @@ import filesystem.HardDisk;
 public class Test {
 
 	public static void main(String[] args) throws IOException, DecodingException {
-		HardDisk hd = HardDisk.createDisk(".\\Disk\\Harddisk1.bin", 8192,true);
-		FAT16IO.formatDisk(hd);
-		System.out.println("Disk formated");
-		hd.closeDiskFile();
-		System.out.println("Disk closed");
+//		HardDisk hd = HardDisk.createDisk(".\\Disk\\Harddisk1.bin", 8192,true);
+//		FAT16IO.formatDisk(hd);
+//		System.out.println("Disk formated");
+//		hd.closeDiskFile();
+//		System.out.println("Disk closed");
 		
 		//HardDisk hdmounted =HardDisk.openDisk(".\\Disk\\Harddisk1.bin");
 		
@@ -30,7 +30,7 @@ public class Test {
 		System.out.println("list ");
 		List<FSDirectory> l =fat.listdir("\\INROOT1\\"); // \\INROOT2\\
 		for(FSDirectory d:l){
-			System.out.println("\nPrintdir beginn" +d.getFilename());
+			System.out.println("\nPrintdir beginn " +d.getFilename());
 		}
 		
 		hdmounted.closeDiskFile();

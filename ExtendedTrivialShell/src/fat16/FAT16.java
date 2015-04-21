@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.codehaus.preon.DecodingException;
 import org.codehaus.preon.annotation.BoundList;
 
@@ -22,6 +23,8 @@ import filesystem.HardDisk;
 import filesystem.FSDirectory.fileTypeEnum;
 
 public class FAT16 extends FileSystem {
+	private static final Logger logger =
+	        Logger.getLogger(FAT16.class.getName());
 
 	private int countofClusters;
 	private int totalSectorCount;
@@ -71,12 +74,12 @@ public class FAT16 extends FileSystem {
 			curdir = getSubDirectoryEntrybyName(dirString,curdir);
 		}
 		
-		System.out.println("curdir logical"+curdir);
+		logger.debug("curdir logical: "+curdir);
 		
 		LinkedList<FSDirectory> dirList = new LinkedList<FSDirectory>();
 		List<DirectoryEntry> dir= curdir.getDirEntries(); 
 		//debug 
-				System.out.println(dir);
+				logger.debug(dir);
 				
 		for(DirectoryEntry d: dir){
 			if(d == null){
@@ -104,9 +107,9 @@ public class FAT16 extends FileSystem {
 
 	private DirectoryLogical getSubDirectoryEntrybyName(String dirName, DirectoryLogical curdir) throws DecodingException, IOException{
 		for(DirectoryEntry dirEntry:curdir.getDirEntries()){
-			System.out.println("cur entry: "+dirEntry.getFileName() + " compared to "+ dirName);
+			logger.debug("cur entry: "+dirEntry.getFileName() + " compared to "+ dirName);
 			if(dirEntry.getFileName().equals(dirName)){
-				System.out.println(" equal! ");
+				logger.debug(" equal! ");
 				DirectoryLogical targetdir=new DirectoryLogical();
 				List<Short> entryIndexList = this.getFATEntryIndexList(dirEntry.getStartCluster());
 				targetdir.setStartClusterIndex(dirEntry.getStartCluster());
@@ -117,8 +120,8 @@ public class FAT16 extends FileSystem {
 					}
 				}
 				targetdir.setParentdir(curdir);
-				DirectoryEntry[] dirEntries= FAT16IO.readSingleDirectoryCluster(this, dirEntry.getStartCluster());
-				targetdir.setDirEntries(Arrays.asList(dirEntries));
+				//DirectoryEntry[] dirEntries= FAT16IO.readSingleDirectoryCluster(this, dirEntry.getStartCluster());
+				//targetdir.setDirEntries(Arrays.asList(dirEntries));
 				return targetdir;
 			}
 		}
